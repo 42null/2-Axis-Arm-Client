@@ -1,9 +1,10 @@
-import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
+
+import static java.awt.Component.CENTER_ALIGNMENT;
 
 public class DisplayScreen implements Runnable{
     private Dimension _windowDimensions;
@@ -48,28 +49,47 @@ public class DisplayScreen implements Runnable{
         _bagConstraints.fill = GridBagConstraints.BOTH;
         _bagConstraints.weightx = 1.0;
         _bagConstraints.weighty = 1.0;
-//        _largePanel.add(makeUnit(new JLabel(theme_.get_title()), _gridBag, _bagConstraints));
+        JLabel tmpLabel = new JLabel(theme_.get_title());
+        tmpLabel.setVerticalAlignment(JLabel.TOP);
+//        _bagConstraints.gridwidth = GridBagConstraints.REMAINDER; //end row
 
-        System.out.println("---");
+        _largePanel.add(makeUnit(tmpLabel, _gridBag, _bagConstraints));
+//        _largePanel.add(tmpLabel);
+
 
 //        BufferedImage img = ImageIO.read(new File("tick-tack-toe_generic.png"));
 //        JLabel image1 = new JLabel(new ImageIcon(img));
 //
 //        _largePanel.add(makeUnit(image1, gridbag, c));
-//        _largePanel.add(makeUnit(new JButton("Button2"), gridbag, c));
-//        _largePanel.add(makeUnit(new JButton("Button3"), gridbag, c));
-//
-//        c.gridwidth = GridBagConstraints.REMAINDER; //end row
-//        _largePanel.add(makeUnit(new JButton("Button4"), gridbag, c));
-//
-//        c.weightx = 0.0;                //reset to the default
-//        _largePanel.add(makeUnit(new JButton("Button5"), gridbag, c)); //another row
-//
-//        c.gridwidth = GridBagConstraints.RELATIVE; //next-to-last in row
-//        _largePanel.add(makeUnit(new JButton("Button6"), gridbag, c));
-//
-//        c.gridwidth = GridBagConstraints.REMAINDER; //end row
-//        _largePanel.add(makeUnit(new JButton("Button7"), gridbag, c));
+//        _bagConstraints.setVerticalAlignment(JLabel.TOP);
+        _bagConstraints.weightx = 0.0;                //reset to the default
+
+        _largePanel.add(makeUnit(new JButton("Button2"), _gridBag, _bagConstraints));
+
+        _largePanel.add(createJPannelForVideo());
+//        JFrame frame = new JFrame("Demo");
+//        JLabel label;
+//        label = new JLabel("This is demo label!");
+//        label.setFont(new Font("Verdana", Font.PLAIN, 14));
+//        label.setVerticalAlignment(JLabel.TOP);
+//        Border border = BorderFactory.createLineBorder(Color.ORANGE);
+//        label.setBorder(border);
+//        frame.add(label);
+//        frame.setSize(600,300);
+//        frame.setVisible(true);
+        _largePanel.add(makeUnit(new JButton("Button3"), _gridBag, _bagConstraints));
+
+        _bagConstraints.gridwidth = GridBagConstraints.REMAINDER; //end row
+        _largePanel.add(makeUnit(new JButton("Button4"), _gridBag, _bagConstraints));
+
+        _bagConstraints.weightx = 0.0;                //reset to the default
+        _largePanel.add(makeUnit(new JButton("Button5"), _gridBag, _bagConstraints)); //another row
+
+        _bagConstraints.gridwidth = GridBagConstraints.RELATIVE; //next-to-last in row
+        _largePanel.add(makeUnit(new JButton("Button6"), _gridBag, _bagConstraints));
+
+        _bagConstraints.gridwidth = GridBagConstraints.REMAINDER; //end row
+        _largePanel.add(makeUnit(new JButton("Button7"), _gridBag, _bagConstraints));
 //
 //        c.gridwidth = 1;                //reset to the default
 //        c.gridheight = 2;
@@ -81,7 +101,29 @@ public class DisplayScreen implements Runnable{
 //        c.gridheight = 1;               //reset to the default
 //        _largePanel.add(makeUnit(new JButton("Button9"), gridbag, c));
 //        _largePanel.add(makeUnit(new JButton("Button10"), gridbag, c));
+        _largePanel.setVisible(true);
 
+    }
+
+    protected JPanel createJPannelForVideo() {
+        JPanel pane = new JPanel();
+        JComponent component = new JPanel();
+        Dimension size = new Dimension(350, 350);
+        component.setMaximumSize(size);
+        component.setPreferredSize(size);
+        component.setMinimumSize(size);
+        TitledBorder border = new TitledBorder(new LineBorder(Color.black), "live feed would somehow be placed here", TitledBorder.CENTER,TitledBorder.BELOW_TOP);
+        border.setTitleColor(Color.black);
+        component.setBorder(border);
+
+        JLabel label = new JLabel("Computer is deciding...");
+        label.setAlignmentX(CENTER_ALIGNMENT);
+        TitledBorder cameraViewBoarder = BorderFactory.createTitledBorder("Camera View");
+        pane.setBorder(cameraViewBoarder);
+        pane.setLayout(new BoxLayout(pane, BoxLayout.Y_AXIS));
+        pane.add(label);
+        pane.add(component);
+        return pane;
     }
 
     public DisplayScreen(Dimension screenDimensions_){
