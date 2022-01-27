@@ -51,8 +51,9 @@ public class ScreenUI extends JPanel {
         JPanel buttonRow = new JPanel();
         //Use default FlowLayout.
         buttonRow.add(mainTabVideoFeedBox(false));
+        buttonRow.add(tickTackToeGameButtons());
         buttonRow.add(createYAlignmentExample(true));
-        buttonRow.add(boxOfButtons());
+        buttonRow.add(videoButtons());
 //        buttonRow.add(mainTabVideoFeedBox(true));
         tabbedPane.addTab(Settings.DEFAULT_PAGE_HEADERS[0], buttonRow);
 
@@ -75,11 +76,14 @@ public class ScreenUI extends JPanel {
     protected JPanel mainTabVideoFeedBox(boolean changeAlignment) {
 
 
-        JButton button0 = new JButton("Computer: <Place Status Here>", createImageIcon("tick-tack-toe_generic.png"));
-        button0.setVerticalTextPosition(AbstractButton.BOTTOM);
-        button0.setHorizontalTextPosition(AbstractButton.CENTER);
+        JButton tickTackToeComponent = new JButton("Computer: <Place Status Here>", createImageIcon("images/tick-tack-toe_generic.png"));
+        tickTackToeComponent.setSize(200,80);
+        tickTackToeComponent.setBorder(BorderFactory.createLineBorder(Color.BLUE, 5));
+        tickTackToeComponent.setVerticalTextPosition(AbstractButton.BOTTOM);
+        tickTackToeComponent.setHorizontalTextPosition(AbstractButton.CENTER);
+        tickTackToeComponent.setAlignmentX(CENTER_ALIGNMENT);
 
-        String title;
+//        String title;
 //        if (changeAlignment) {
 //            title = "Desired";
 //            button1.setAlignmentY(BOTTOM_ALIGNMENT);
@@ -88,10 +92,85 @@ public class ScreenUI extends JPanel {
 //            title = "";
 //        }
 
+//        GridBagLayout gridLayout = new GridBagLayout();
+
+//        JPanel pane = new JPanel(gridLayout);
         JPanel pane = new JPanel();
+        pane.setLayout(new GridLayout(3,3));
+
         pane.setBorder(BorderFactory.createTitledBorder("Live Video Feed"));
-        pane.setLayout(new BoxLayout(pane, BoxLayout.X_AXIS));
-        pane.add(button0);
+        pane.setLayout(new BoxLayout(pane, BoxLayout.Y_AXIS));
+        pane.add(tickTackToeComponent);
+//        GridLayout gridLayout = new GridLayout(5,1);
+        GridBagConstraints _bagConstraints = new GridBagConstraints();
+
+//        pane.setLayout(gridLayout);
+
+        _bagConstraints.weightx = 0.0;                //reset to the default
+
+        JButton button1 = new JButton("Grayscale", createImageIcon("images/middle.gif"));
+        JButton button2 = new JButton("Make Move", createImageIcon("images/middle.gif"));
+        JButton button3 = new JButton("Something Else", createImageIcon("images/middle.gif"));
+        JButton button4 = new JButton("Yet Another Button or box", createImageIcon("images/middle.gif"));
+
+        JPanel optionPane = new JPanel();
+//        optionPane.setBorder(BorderFactory.createTitledBorder("Live Video Feed"));
+        optionPane.add(new JLabel("<html><center>Video</center>Options</html>",SwingConstants.CENTER));
+        optionPane.add(button1);
+        optionPane.add(button2);
+        optionPane.add(button3);
+        optionPane.add(button4);
+        pane.add(optionPane);
+
+//        button1.setVerticalTextPosition(AbstractButton.BOTTOM);
+//        button1.setHorizontalTextPosition(AbstractButton.CENTER);
+//        button2.setVerticalTextPosition(AbstractButton.BOTTOM);
+//        button2.setHorizontalTextPosition(AbstractButton.CENTER);
+//        button3.setVerticalTextPosition(AbstractButton.BOTTOM);
+//        button3.setHorizontalTextPosition(AbstractButton.CENTER);
+//        button4.setVerticalTextPosition(AbstractButton.BOTTOM);
+//        button4.setHorizontalTextPosition(AbstractButton.CENTER);
+
+//        pane.add(button1);
+//        pane.add(button2);
+//        pane.add(button3);
+//        pane.add(button4);
+
+//        pane.add(makeUnit(button1, gridLayout, _bagConstraints)); //another row
+//        pane.add(makeUnit(new JButton("Button3"), gridLayout, _bagConstraints));
+//
+//        _bagConstraints.gridwidth = GridBagConstraints.REMAINDER; //end row
+//        pane.add(makeUnit(new JButton("Button4"), gridLayout, _bagConstraints));
+//
+//        _bagConstraints.weightx = 0.0;                //reset to the default
+//        pane.add(makeUnit(new JButton("Button5"), gridLayout, _bagConstraints)); //another row
+//
+//        _bagConstraints.gridwidth = GridBagConstraints.RELATIVE; //next-to-last in row
+//        pane.add(makeUnit(new JButton("Button6"), gridLayout, _bagConstraints));
+//
+//        _bagConstraints.gridwidth = GridBagConstraints.REMAINDER; //end row
+//        pane.add(makeUnit(new JButton("Button7"), gridLayout, _bagConstraints));
+
+//        pane.add(button1);
+//        pane.add(button2);
+//        pane.add(button3);
+//        pane.add(button4);
+
+        return pane;
+    }
+
+
+    protected Component makeUnit(Component component,
+                                 GridBagLayout gridbag,
+                                 GridBagConstraints c) {
+        gridbag.setConstraints(component, c);
+        return component;
+    }
+
+    public JPanel videoButtons(){
+        JPanel pane2 = new JPanel();
+        pane2.setLayout(new BoxLayout(pane2, BoxLayout.Y_AXIS));
+
 
         JButton button1 = new JButton("Start Game", createImageIcon("images/middle.gif"));
         JButton button2 = new JButton("Make Move", createImageIcon("images/middle.gif"));
@@ -105,12 +184,11 @@ public class ScreenUI extends JPanel {
         button3.setHorizontalTextPosition(AbstractButton.CENTER);
         button4.setVerticalTextPosition(AbstractButton.BOTTOM);
         button4.setHorizontalTextPosition(AbstractButton.CENTER);
-        pane.add(button1);
-        pane.add(button2);
-        pane.add(button3);
-        pane.add(button4);
-
-        return pane;
+        pane2.add(button1);
+        pane2.add(button2);
+        pane2.add(button3);
+        pane2.add(button4);
+        return pane2;
     }
 
     protected JPanel createLabelAndComponent(boolean doItRight) {
@@ -199,11 +277,13 @@ public class ScreenUI extends JPanel {
         }
     }
 
-    private JPanel boxOfButtons(){
+    private JPanel tickTackToeGameButtons(){
 //TODO: PORT BETTER
         JButton[] _buttonArray;
-        JPanel frame;
-        frame = new JPanel();
+        JPanel frame = new JPanel();
+        frame.setBorder(BorderFactory.createTitledBorder("Game Board"));
+        JLabel userStatus = new JLabel("<html>It's <u>your</u> turn (COLOR)</html>");
+
 
         //        GENERATE BUTTONS FROM LIST
         int width = 3;
@@ -242,6 +322,10 @@ public class ScreenUI extends JPanel {
 
 //        chk_togFace.addActionListener(this);
 //        frame.pack();
+        JPanel optionPane = new JPanel();
+        optionPane.add(userStatus);
+        optionPane.add(userStatus);
+        frame.add(optionPane);
         frame.setVisible(true);
         return frame;
     }

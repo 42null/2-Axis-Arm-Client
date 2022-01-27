@@ -91,16 +91,16 @@ public class DisplayScreen implements Runnable{
         _bagConstraints.gridwidth = GridBagConstraints.REMAINDER; //end row
         _largePanel.add(makeUnit(new JButton("Button7"), _gridBag, _bagConstraints));
 //
-//        c.gridwidth = 1;                //reset to the default
-//        c.gridheight = 2;
-//        c.weighty = 1.0;
-//        _largePanel.add(makeUnit(new JButton("Button8"), gridbag, c));
-//
-//        c.weighty = 0.0;                //reset to the default
-//        c.gridwidth = GridBagConstraints.REMAINDER; //end row
-//        c.gridheight = 1;               //reset to the default
-//        _largePanel.add(makeUnit(new JButton("Button9"), gridbag, c));
-//        _largePanel.add(makeUnit(new JButton("Button10"), gridbag, c));
+        _bagConstraints.gridwidth = 1;                //reset to the default
+        _bagConstraints.gridheight = 2;
+        _bagConstraints.weighty = 1.0;
+        _largePanel.add(makeUnit(new JButton("Button8"), _gridBag, _bagConstraints));
+
+        _bagConstraints.weighty = 0.0;                //reset to the default
+        _bagConstraints.gridwidth = GridBagConstraints.REMAINDER; //end row
+        _bagConstraints.gridheight = 1;               //reset to the default
+        _largePanel.add(makeUnit(new JButton("Button9"), _gridBag, _bagConstraints));
+        _largePanel.add(makeUnit(new JButton("Button10"), _gridBag, _bagConstraints));
         _largePanel.setVisible(true);
 
     }
