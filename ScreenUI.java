@@ -42,8 +42,12 @@
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-public class ScreenUI extends JPanel {
+public class ScreenUI extends JPanel implements ActionListener {
+    TickToeButton[] _boardButtons = new TickToeButton[9];
+
     public ScreenUI() {
         super(new BorderLayout());
         JTabbedPane tabbedPane = new JTabbedPane();
@@ -51,15 +55,29 @@ public class ScreenUI extends JPanel {
         JPanel buttonRow = new JPanel();
         //Use default FlowLayout.
         buttonRow.add(mainTabVideoFeedBox(false));
-        buttonRow.add(tickTackToeGameButtons());
-        buttonRow.add(createYAlignmentExample(true));
-        buttonRow.add(videoButtons());
+
+        JPanel totalBox = new JPanel();
+        totalBox.setBorder(BorderFactory.createLineBorder(Color.GREEN, 3));
+        totalBox.add(tickTackToeGameButtons());
+        JLabel underGameBoard = new JLabel("<html>It's <u>your</u> turn (COLOR)</html>",SwingConstants.CENTER);
+        setVertical(totalBox);
+        alignCenter(underGameBoard);
+        underGameBoard.setOpaque(true);
+        underGameBoard.setBackground(Settings.STARTING_UNDER_GAME_BOARD_COLOR);
+        totalBox.add(underGameBoard);
+
+
+        buttonRow.add(totalBox);
+//        buttonRow.add(createYAlignmentExample(true));
+//        buttonRow.add(videoButtons());
 //        buttonRow.add(mainTabVideoFeedBox(true));
+        buttonRow.setBorder(BorderFactory.createLineBorder(Color.ORANGE, 3));
+
         tabbedPane.addTab(Settings.DEFAULT_PAGE_HEADERS[0], buttonRow);
 
         JPanel labelAndComponent = new JPanel();
         //Use default FlowLayout.
-        labelAndComponent.add(createLabelAndComponent(false));
+//        labelAndComponent.add(createLabelAndComponent(false));
 //        labelAndComponent.add(createLabelAndComponent(true));
         tabbedPane.addTab(Settings.DEFAULT_PAGE_HEADERS[1], labelAndComponent);
 
@@ -166,6 +184,9 @@ public class ScreenUI extends JPanel {
         gridbag.setConstraints(component, c);
         return component;
     }
+
+    private void setVertical(JComponent component_){ component_.setLayout(new BoxLayout(component_, BoxLayout.Y_AXIS)); }
+    private void alignCenter(JComponent component_){ component_.setAlignmentX(CENTER_ALIGNMENT); }
 
     public JPanel videoButtons(){
         JPanel pane2 = new JPanel();
@@ -279,53 +300,26 @@ public class ScreenUI extends JPanel {
 
     private JPanel tickTackToeGameButtons(){
 //TODO: PORT BETTER
-        JButton[] _buttonArray;
         JPanel frame = new JPanel();
         frame.setBorder(BorderFactory.createTitledBorder("Game Board"));
-        JLabel userStatus = new JLabel("<html>It's <u>your</u> turn (COLOR)</html>");
 
-
-        //        GENERATE BUTTONS FROM LIST
-        int width = 3;
-        String[] buttonStringArray = new String[width*width];
-        _buttonArray = new JButton[buttonStringArray.length];
-//        ArrayList<String> buttonStringTempList = new ArrayList<String>();
-
-        for(int i=0; i<buttonStringArray.length; i++){//CREATE STRINGS TO LATER TURN INTO BUTTONS
-            buttonStringArray[i] = i+"";
-        }
-        for(int i = 0; i< _buttonArray.length; i++){//USE STRINGS TO TURN INTO BUTTONS
-            JButton tmpButton = new JButton(buttonStringArray[i]);
+        //        GENERATE BUTTONS USING GLOBALISH ARRAY
+        for(int i = 0; i< _boardButtons.length; i++){//USE STRINGS TO TURN INTO BUTTONS
+            TickToeButton tmpButton = new TickToeButton(i+"");
             tmpButton.setPreferredSize(new Dimension(80,80));
             tmpButton.setBackground(Settings.STARTING_COLOR);
-            _buttonArray[i] = tmpButton;
+            _boardButtons[i] = tmpButton;
         }
 
 
 
-        frame.setLayout(new GridLayout((int) Math.sqrt(buttonStringArray.length),(int) Math.sqrt(buttonStringArray.length)));
-//        frame.add(t1);
-//        frame.add(l);
-//        frame.add(chk_togFace);
-
-
+        frame.setLayout(new GridLayout(3,3));
 //      ADD ALL BUTTONS TO FRAME
-        for (int i = 0; i < _buttonArray.length; i++) {
-            JButton tmpButton = _buttonArray[i];
-//            tmpButton.addActionListener(this);
-//            tmpButton.setAction();
-//            tmpButton.setHideActionText(false);
-//            tmpButton.setText(i+"*");
-//            tmpButton.hashCode();
+        for (int i = 0; i < _boardButtons.length; i++) {
+            JButton tmpButton = _boardButtons[i];
+            tmpButton.addActionListener(this);
             frame.add(tmpButton);
         }
-
-//        chk_togFace.addActionListener(this);
-//        frame.pack();
-        JPanel optionPane = new JPanel();
-        optionPane.add(userStatus);
-        optionPane.add(userStatus);
-        frame.add(optionPane);
         frame.setVisible(true);
         return frame;
     }
@@ -359,5 +353,19 @@ public class ScreenUI extends JPanel {
                 createAndShowGUI();
             }
         });
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent actionEvent) {
+        String source = actionEvent.getSource().toString();
+//        int boxNumber = Integer.parseInt(source.substring("javax.swing.JButton[".length(),source.indexOf(',')));
+        String boxNumber = (source.substring("TickToeButton[".length(),source.indexOf(',')));
+        System.out.println("User clicked '" + boxNumber + "'");
+
+//        TickToeButton selectedButton = _boardButtons[boxNumber];
+////
+//        selectedButton.setBackground(selectedButton.getColor());
+//        selectedButton.leftClick();
+//        selectedButton.setBackground(selectedButton.getColor());
     }
 }
