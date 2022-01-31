@@ -46,10 +46,17 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class ScreenUI extends JPanel implements ActionListener {
-    TickToeButton[] _boardButtons = new TickToeButton[9];
+    TickToeButton[] _boardButtons;
+    private static GameLogic _gameLogic;
 
-    public ScreenUI() {
+    public ScreenUI(GameLogic gameLogic_) {
         super(new BorderLayout());
+
+        this._gameLogic = gameLogic_;
+        _boardButtons = gameLogic_.getBoardButtons();
+
+
+
         JTabbedPane tabbedPane = new JTabbedPane();
 
         JPanel buttonRow = new JPanel();
@@ -316,7 +323,7 @@ public class ScreenUI extends JPanel implements ActionListener {
         frame.setLayout(new GridLayout(3,3));
 //      ADD ALL BUTTONS TO FRAME
         for (int i = 0; i < _boardButtons.length; i++) {
-            JButton tmpButton = _boardButtons[i];
+            TickToeButton tmpButton = _boardButtons[i];
             tmpButton.addActionListener(this);
             frame.add(tmpButton);
         }
@@ -330,13 +337,13 @@ public class ScreenUI extends JPanel implements ActionListener {
      * this method should be invoked from the
      * event-dispatching thread.
      */
-    private static void createAndShowGUI() {
+    static void createAndShowGUI() {
         //Create and set up the window.
         JFrame frame = new JFrame(Settings.DEFAULT_MAIN_SCREEN_TITLE);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         //Create and set up the content pane.
-        ScreenUI newContentPane = new ScreenUI();
+        ScreenUI newContentPane = new ScreenUI(_gameLogic);
         newContentPane.setOpaque(true); //content panes must be opaque
         frame.setContentPane(newContentPane);
 
@@ -345,22 +352,25 @@ public class ScreenUI extends JPanel implements ActionListener {
         frame.setVisible(true);
     }
 
-    public static void main(String[] args) {
-        //Schedule a job for the event-dispatching thread:
-        //creating and showing this application's GUI.
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                createAndShowGUI();
-            }
-        });
-    }
+//    public static void main(String[] args) {
+//        //Schedule a job for the event-dispatching thread:
+//        //creating and showing this application's GUI.
+//        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+//            public void run() {
+//                createAndShowGUI();
+//            }
+//        });
+//    }
 
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
         String source = actionEvent.getSource().toString();
-//        int boxNumber = Integer.parseInt(source.substring("javax.swing.JButton[".length(),source.indexOf(',')));
-        String boxNumber = (source.substring("TickToeButton[".length(),source.indexOf(',')));
+        int boxNumber = Integer.parseInt((source.substring("TickToeButton[".length(),source.indexOf(','))));
         System.out.println("User clicked '" + boxNumber + "'");
+
+        _gameLogic.leftClickedBoardButton(boxNumber);
+//        _gameLogic.checkForWin(boxNumber);
+
 
 //        TickToeButton selectedButton = _boardButtons[boxNumber];
 ////
