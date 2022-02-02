@@ -11,6 +11,9 @@ public class Settings {
     public static final String ROBOT_IS_DECIDING = "Please wait, robot is still thinking";
     public static final String GAME_IS_OVER_COMPUTER_WIN = "<COMPUTER WIN MESSAGE HERE>";
     public static final String GAME_IS_OVER_PLAYER_WIN = "<PLAYER WIN MESSAGE HERE>";
+    public static final String PLAYER_MOVE_WAS_VALID = "Move was valid, waiting for computer.";
+    public static final String PLAYER_MOVE_WAS_NOT_VALID_PLAYER_OWNS = "That's already your space.";
+    public static final String PLAYER_MOVE_WAS_NOT_VALID_COMPUTER_OWNS = "That's already your space.";
 //COLORS
     public static final Color STARTING_COLOR = new Color(86, 150, 116);
     public static final Color STARTING_UNDER_GAME_BOARD_COLOR = new Color(0xB4B4B4);

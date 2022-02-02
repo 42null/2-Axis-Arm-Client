@@ -1,3 +1,5 @@
+import java.util.Random;
+
 /**
  * A class created to deal with the inputs and outputs of a tick-tack-toe board
  */
@@ -8,9 +10,17 @@ public class GameLogic {
     private boolean _robotIsMoving = false;
     private boolean _robotIsDeciding = false;
     private boolean _gameIsOver = false;
+    private Random _random = new Random();
 
+    enum ComputerPlayStyles{
+        RANDOM(0),
+        RANDOM_WITH_BLOCK(1);
 
-
+        private final int _representiveNumber;
+        ComputerPlayStyles(int number_) {
+            this._representiveNumber = number_;
+        }
+    }
     public GameLogic(){
 //    public GameLogic(ScreenUI screenUI_){
 //        this._screenUI = screenUI_;
@@ -19,12 +29,12 @@ public class GameLogic {
     public TickToeButton[] getBoardButtons(){return _sharedButtons;}
 
     public String leftClickedBoardButton(int buttonNumber_){
-        String displayStatement = "ERROR: Could not come up with response";
+        String displayStatement = "ERROR: Did not change my statement";
 
         if(_robotIsMoving){
-            return Settings.ROBOT_IS_MOVING;
+            displayStatement = Settings.ROBOT_IS_MOVING;
         }else if(_robotIsDeciding){
-            return Settings.ROBOT_IS_DECIDING;
+            displayStatement = Settings.ROBOT_IS_DECIDING;
         }else if(_gameIsOver){
             //TODO: Finish this if
         }
@@ -35,16 +45,56 @@ public class GameLogic {
 
                 currentButton.setOwner(2);
                 currentButton.setColor(Settings.PLAYERS_COLOR);
+                displayStatement = Settings.PLAYER_MOVE_WAS_VALID;
                 checkForWin(buttonNumber_);
                 break;
             case(1):
+                displayStatement = Settings.PLAYER_MOVE_WAS_NOT_VALID_COMPUTER_OWNS;
                 break;
             case(2):
+                displayStatement = Settings.PLAYER_MOVE_WAS_NOT_VALID_PLAYER_OWNS;
                 break;
+        }
+
+        /*
+        "abcdefghijklmnopqrstuvwzyz012345".length(); // 6789"; If it exceeds this amount, it will soft crash
+         */
+        if(displayStatement.length() > 32){
+            //SPLIT UP THE RESPONSE
+//            String[] words = displayStatement.split("\\s+");
+            String[] words = displayStatement.split(" ");
+            displayStatement = "";
+            int goalPerRow = displayStatement.length() / 32;
+            int lengthOfLineCurrently = 0;
+            for (String word: words) {
+                if(lengthOfLineCurrently+word.length()<31){//Space Included
+                    displayStatement+=(" "+word);
+                    lengthOfLineCurrently += word.length()+1;
+                }else{
+                    displayStatement+="<br/>"+word;
+                    lengthOfLineCurrently = word.length()+1;
+                }
+            }
+        }
+        return "<html>"+displayStatement+"</html>";
+    }
+
+    public String playComputerMove(ComputerPlayStyles mode_){
+        int buttonNumber = _random.nextInt(9);
+        String displayStatement = "Error: Computer did not write out to this return statement.";
+
+        if(mode_ == ComputerPlayStyles.RANDOM){
+            TickToeButton currentButton = _sharedButtons[buttonNumber];
+            while(currentButton.getTileOwner() != 0) {
+                System.out.println("Attempt at random square was not successfull: \"Already Owned\"");
+                currentButton = _sharedButtons[_random.nextInt(9)];
+            }
+            currentButton.setOwner(1);
+            currentButton.setColor(Settings.COMPUTERS_COLOR);
+            displayStatement = "Computer made a move";
         }
         return displayStatement;
     }
-
 
     public int checkForWin(int buttonNumber_){// 0 for no win,  1 for computer win, 2 for player win
         TickToeButton currentButton = _sharedButtons[buttonNumber_];

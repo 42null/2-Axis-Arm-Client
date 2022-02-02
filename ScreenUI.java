@@ -49,6 +49,11 @@ public class ScreenUI extends JPanel implements ActionListener {
     TickToeButton[] _boardButtons;
     private static GameLogic _gameLogic;
 
+//MUTABLE LABELS
+    private JLabel _underGameBoard;
+    JPanel totalBox = new JPanel();
+
+
     public ScreenUI(GameLogic gameLogic_) {
         super(new BorderLayout());
 
@@ -60,18 +65,21 @@ public class ScreenUI extends JPanel implements ActionListener {
         JTabbedPane tabbedPane = new JTabbedPane();
 
         JPanel buttonRow = new JPanel();
+        buttonRow.setAlignmentY(CENTER_ALIGNMENT);
+        buttonRow.setPreferredSize(new Dimension(1_280,720));
         //Use default FlowLayout.
         buttonRow.add(mainTabVideoFeedBox(false));
 
-        JPanel totalBox = new JPanel();
+        totalBox = new JPanel();
         totalBox.setBorder(BorderFactory.createLineBorder(Color.GREEN, 3));
         totalBox.add(tickTackToeGameButtons());
-        JLabel underGameBoard = new JLabel("<html>It's <u>your</u> turn (COLOR)</html>",SwingConstants.CENTER);
+        _underGameBoard = new JLabel("<html>It's <u>your</u> turn <br/>(COLOR)</html>",SwingConstants.CENTER);
         setVertical(totalBox);
-        alignCenter(underGameBoard);
-        underGameBoard.setOpaque(true);
-        underGameBoard.setBackground(Settings.STARTING_UNDER_GAME_BOARD_COLOR);
-        totalBox.add(underGameBoard);
+        alignCenter(_underGameBoard);
+        _underGameBoard.setOpaque(true);
+        _underGameBoard.setBackground(Settings.STARTING_UNDER_GAME_BOARD_COLOR);
+        _underGameBoard.setSize(_underGameBoard.getWidth(),_underGameBoard.getHeight()+50);
+        totalBox.add(_underGameBoard);
 
 
         buttonRow.add(totalBox);
@@ -79,7 +87,7 @@ public class ScreenUI extends JPanel implements ActionListener {
 //        buttonRow.add(videoButtons());
 //        buttonRow.add(mainTabVideoFeedBox(true));
         buttonRow.setBorder(BorderFactory.createLineBorder(Color.ORANGE, 3));
-
+//        buttonRow.setPreferredSize(new Dimension(buttonRow.getWidth(),buttonRow.getHeight()+10000));
         tabbedPane.addTab(Settings.DEFAULT_PAGE_HEADERS[0], buttonRow);
 
         JPanel labelAndComponent = new JPanel();
@@ -368,14 +376,19 @@ public class ScreenUI extends JPanel implements ActionListener {
         int boxNumber = Integer.parseInt((source.substring("TickToeButton[".length(),source.indexOf(','))));
         System.out.println("User clicked '" + boxNumber + "'");
 
-        _gameLogic.leftClickedBoardButton(boxNumber);
-//        _gameLogic.checkForWin(boxNumber);
+        updateLabel(_underGameBoard, _gameLogic.leftClickedBoardButton(boxNumber));
 
+        updateLabel(_underGameBoard, _gameLogic.playComputerMove(GameLogic.ComputerPlayStyles.RANDOM));
 
 //        TickToeButton selectedButton = _boardButtons[boxNumber];
 ////
 //        selectedButton.setBackground(selectedButton.getColor());
 //        selectedButton.leftClick();
 //        selectedButton.setBackground(selectedButton.getColor());
+    }
+
+    private void updateLabel(JLabel label_, String message_){
+        System.out.println("message_ = "+message_);
+        label_.setText(message_);
     }
 }
