@@ -81,13 +81,14 @@ public class ScreenUI extends JPanel implements ActionListener {
         _underGameBoard.setSize(_underGameBoard.getWidth(),_underGameBoard.getHeight()+50);
         totalBox.add(_underGameBoard);
 
-
         buttonRow.add(totalBox);
+
 //        buttonRow.add(createYAlignmentExample(true));
 //        buttonRow.add(videoButtons());
 //        buttonRow.add(mainTabVideoFeedBox(true));
         buttonRow.setBorder(BorderFactory.createLineBorder(Color.ORANGE, 3));
 //        buttonRow.setPreferredSize(new Dimension(buttonRow.getWidth(),buttonRow.getHeight()+10000));
+
         tabbedPane.addTab(Settings.DEFAULT_PAGE_HEADERS[0], buttonRow);
 
         JPanel labelAndComponent = new JPanel();
@@ -377,8 +378,8 @@ public class ScreenUI extends JPanel implements ActionListener {
         System.out.println("User clicked '" + boxNumber + "'");
 
         updateLabel(_underGameBoard, _gameLogic.leftClickedBoardButton(boxNumber));
-
-        updateLabel(_underGameBoard, _gameLogic.playComputerMove(GameLogic.ComputerPlayStyles.RANDOM));
+        if(!(_gameLogic.getMoveNumber() % 2 == 0))//Don't run if the player did not make a move
+            updateLabel(_underGameBoard, _gameLogic.playComputerMove(GameLogic.ComputerPlayStyles.RANDOM));
 
 //        TickToeButton selectedButton = _boardButtons[boxNumber];
 ////

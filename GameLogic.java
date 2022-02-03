@@ -11,6 +11,7 @@ public class GameLogic {
     private boolean _robotIsDeciding = false;
     private boolean _gameIsOver = false;
     private Random _random = new Random();
+    private int _moveNumber = 0;
 
     enum ComputerPlayStyles{
         RANDOM(0),
@@ -21,6 +22,11 @@ public class GameLogic {
             this._representiveNumber = number_;
         }
     }
+//GETTERS
+    public int getMoveNumber(){return _moveNumber;}
+//END GETTERS
+
+
     public GameLogic(){
 //    public GameLogic(ScreenUI screenUI_){
 //        this._screenUI = screenUI_;
@@ -46,6 +52,7 @@ public class GameLogic {
                 currentButton.setOwner(2);
                 currentButton.setColor(Settings.PLAYERS_COLOR);
                 displayStatement = Settings.PLAYER_MOVE_WAS_VALID;
+                _moveNumber++;
                 checkForWin(buttonNumber_);
                 break;
             case(1):
@@ -80,6 +87,10 @@ public class GameLogic {
     }
 
     public String playComputerMove(ComputerPlayStyles mode_){
+        if(_moveNumber > 8){
+            return "Game is already over";
+        }
+
         int buttonNumber = _random.nextInt(9);
         String displayStatement = "Error: Computer did not write out to this return statement.";
 
@@ -92,6 +103,7 @@ public class GameLogic {
             currentButton.setOwner(1);
             currentButton.setColor(Settings.COMPUTERS_COLOR);
             displayStatement = "Computer made a move";
+            _moveNumber++;
         }
         return displayStatement;
     }
