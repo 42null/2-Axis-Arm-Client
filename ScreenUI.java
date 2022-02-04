@@ -48,6 +48,7 @@ import java.awt.event.ActionListener;
 public class ScreenUI extends JPanel implements ActionListener {
     TickToeButton[] _boardButtons;
     private static GameLogic _gameLogic;
+    private static CameraCapture _cameraController;
 
 //MUTABLE LABELS
     private JLabel _underGameBoard;
@@ -59,7 +60,7 @@ public class ScreenUI extends JPanel implements ActionListener {
 
         this._gameLogic = gameLogic_;
         _boardButtons = gameLogic_.getBoardButtons();
-
+        _cameraController = new CameraCapture();
 
 
         JTabbedPane tabbedPane = new JTabbedPane();
@@ -83,6 +84,7 @@ public class ScreenUI extends JPanel implements ActionListener {
 
         buttonRow.add(totalBox);
 
+
 //        buttonRow.add(createYAlignmentExample(true));
 //        buttonRow.add(videoButtons());
 //        buttonRow.add(mainTabVideoFeedBox(true));
@@ -105,6 +107,9 @@ public class ScreenUI extends JPanel implements ActionListener {
 
         //Add tabbedPane to this panel.
         add(tabbedPane, BorderLayout.CENTER);
+        try{
+//            buttonRow.add(_cameraController.getFrame());
+        }catch(Exception e){}
     }
 
     protected JPanel mainTabVideoFeedBox(boolean changeAlignment) {
@@ -347,6 +352,10 @@ public class ScreenUI extends JPanel implements ActionListener {
      * event-dispatching thread.
      */
     static void createAndShowGUI() {
+        _cameraController = new CameraCapture();
+
+
+
         //Create and set up the window.
         JFrame frame = new JFrame(Settings.DEFAULT_MAIN_SCREEN_TITLE);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
