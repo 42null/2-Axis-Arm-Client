@@ -4,7 +4,7 @@ import java.awt.*;
 
 public class DesktopClient {
     public GameLogic tickTackToeController = new GameLogic();
-    ScreenUI screenUI = new ScreenUI(tickTackToeController);
+//    ScreenUI screenUI = new ScreenUI(tickTackToeController);
 
 
 //    DisplayController dispControl = new DisplayController();
@@ -21,12 +21,13 @@ public class DesktopClient {
 //
 ////        mainWindow.createMainScreen();
 //        createMainScreen(mainWindow);
-
-
+        ScreenUI screenUI = new ScreenUI(tickTackToeController);
 
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
+                System.out.println("screenUI.createAndShowGUI()");
                 screenUI.createAndShowGUI();
+                System.out.println("Camera thread id = "+screenUI.startCameraThread());
             }
         });
 

@@ -1,12 +1,9 @@
-import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
+import javax.swing.*;
+
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -15,38 +12,59 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 
-public class CameraCapture {
-    VideoCapture video;
+public class CameraCapture extends Thread {
+    private long currentThreadID = -1;//-1 = unset
+    private boolean keepLooping = false;//TODO: Switch to interval
+    private JLabel streamingBox;
 
-    public CameraCapture(){
+//GETTERS
+    public long getCurrentThreadID() {return currentThreadID;}
+//END GETTERS
+
+        public void run(){
+            try {
+                keepLooping = true;
+                this.currentThreadID = Thread.currentThread().getId();
+                System.out.println("Thread " + this.currentThreadID + " is running");
+
+                while(keepLooping){
+                    streamingBox.setIcon(getFrame());
+                }
+
+
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+    static VideoCapture _video;
+    public static BufferedImage _bufImage = null;
+
+    public CameraCapture(JLabel streamBox_){
+        this.streamingBox = streamBox_;
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-        video = new VideoCapture(-1);
-//        Mat f = new Mat();
-//        while (true){
-//            video.read(f);
-//            showResult(f);
+        _video = new VideoCapture(-1);
     }
 
-    public JFrame getFrame() throws IOException {
 
-        Mat frameMat = new Mat();
-        video.read(frameMat);
-
-//        VideoCapture video = new VideoCapture(0);
-        Imgproc.resize(frameMat, frameMat, new Size(640, 480));
-        MatOfByte m = new MatOfByte();
-        Imgcodecs.imencode(".jpg", frameMat, m);
-        byte[] byteArray = m.toArray();
-        BufferedImage bufImage = null;
+    public ImageIcon getFrame() {
         try {
+            Mat frameMat = new Mat();
+            _video.read(frameMat);
+            Imgproc.resize(frameMat, frameMat, new Size(640, 480));
+            MatOfByte m = new MatOfByte();
+            Imgcodecs.imencode(".jpg", frameMat, m);
+            byte[] byteArray = m.toArray();
+            BufferedImage bufImage = null;
             InputStream in = new ByteArrayInputStream(byteArray);
             bufImage = ImageIO.read(in);
-            JFrame frame = new JFrame();
+            JFrame frame = new JFrame("TEST");
             frame.getContentPane().add(new JLabel(new ImageIcon(bufImage)));
-            return frame;
-        }catch(Exception e){}
+            return new ImageIcon(bufImage);
+        }catch(Exception e){e.printStackTrace();}
 
-        return null;
+        return new ImageIcon("CameraCapture did not work");
     }
 
 

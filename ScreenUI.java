@@ -39,11 +39,16 @@
  * default alignments.
  */
 
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 
 public class ScreenUI extends JPanel implements ActionListener {
     TickToeButton[] _boardButtons;
@@ -52,20 +57,21 @@ public class ScreenUI extends JPanel implements ActionListener {
 
 //MUTABLE LABELS
     private JLabel _underGameBoard;
-    JPanel totalBox = new JPanel();
+    private JPanel totalBox = new JPanel();
 
+    private JLabel streamFrame = new JLabel("DEFAULT STARTING");
+    private JPanel buttonRow = new JPanel();
+    private JTabbedPane tabbedPane = new JTabbedPane();
+    JPanel streamPanel = new JPanel();
 
     public ScreenUI(GameLogic gameLogic_) {
         super(new BorderLayout());
 
         this._gameLogic = gameLogic_;
         _boardButtons = gameLogic_.getBoardButtons();
-        _cameraController = new CameraCapture();
 
+        _cameraController = new CameraCapture(streamFrame);
 
-        JTabbedPane tabbedPane = new JTabbedPane();
-
-        JPanel buttonRow = new JPanel();
         buttonRow.setAlignmentY(CENTER_ALIGNMENT);
         buttonRow.setPreferredSize(new Dimension(1_280,720));
         //Use default FlowLayout.
@@ -83,6 +89,16 @@ public class ScreenUI extends JPanel implements ActionListener {
         totalBox.add(_underGameBoard);
 
         buttonRow.add(totalBox);
+
+//        streamFrame = _cameraController.getFrame();
+        streamFrame.setSize(new Dimension(400,400));
+        streamFrame.setBorder(new LineBorder(Color.CYAN,5));
+        streamFrame.setVisible(true);
+        streamPanel.add(streamFrame);
+//        streamFrame.dispatchEvent(new WindowEvent(streamFrame, WindowEvent.WINDOW_CLOSING));
+//        pane.add(new JButton("streamFrame"));
+        buttonRow.add(streamPanel);
+
 
 
 //        buttonRow.add(createYAlignmentExample(true));
@@ -107,20 +123,25 @@ public class ScreenUI extends JPanel implements ActionListener {
 
         //Add tabbedPane to this panel.
         add(tabbedPane, BorderLayout.CENTER);
-        try{
-//            buttonRow.add(_cameraController.getFrame());
-        }catch(Exception e){}
+
     }
 
     protected JPanel mainTabVideoFeedBox(boolean changeAlignment) {
+        JPanel pane = new JPanel();
+        pane.setLayout(new GridLayout(3,3));
+
+        pane.setBorder(BorderFactory.createTitledBorder("Live Video Feed"));
+        pane.setLayout(new BoxLayout(pane, BoxLayout.Y_AXIS));
 
 
         JButton tickTackToeComponent = new JButton("Computer: <Place Status Here>", createImageIcon("images/tick-tack-toe_generic.png"));
+
         tickTackToeComponent.setSize(200,80);
         tickTackToeComponent.setBorder(BorderFactory.createLineBorder(Color.BLUE, 5));
         tickTackToeComponent.setVerticalTextPosition(AbstractButton.BOTTOM);
         tickTackToeComponent.setHorizontalTextPosition(AbstractButton.CENTER);
         tickTackToeComponent.setAlignmentX(CENTER_ALIGNMENT);
+
 
 //        String title;
 //        if (changeAlignment) {
@@ -131,14 +152,6 @@ public class ScreenUI extends JPanel implements ActionListener {
 //            title = "";
 //        }
 
-//        GridBagLayout gridLayout = new GridBagLayout();
-
-//        JPanel pane = new JPanel(gridLayout);
-        JPanel pane = new JPanel();
-        pane.setLayout(new GridLayout(3,3));
-
-        pane.setBorder(BorderFactory.createTitledBorder("Live Video Feed"));
-        pane.setLayout(new BoxLayout(pane, BoxLayout.Y_AXIS));
         pane.add(tickTackToeComponent);
 //        GridLayout gridLayout = new GridLayout(5,1);
         GridBagConstraints _bagConstraints = new GridBagConstraints();
@@ -308,6 +321,16 @@ public class ScreenUI extends JPanel implements ActionListener {
         return pane;
     }
 
+    /**
+     *     Return id of the thread after creation
+     */
+    public long startCameraThread(){
+        _cameraController.start();
+        return _cameraController.getCurrentThreadID();
+    }
+
+
+
     /** Returns an ImageIcon, or null if the path was invalid. */
     protected static ImageIcon createImageIcon(String path) {
         java.net.URL imgURL = ScreenUI.class.getResource(path);
@@ -346,14 +369,18 @@ public class ScreenUI extends JPanel implements ActionListener {
     }
 
 
+//    public static void main(String[] args) {
+//        _gameLogic =  new GameLogic();
+//        createAndShowGUI();
+//    }
+
+
     /**
      * Create the GUI and show it.  For thread safety,
      * this method should be invoked from the
      * event-dispatching thread.
      */
-    static void createAndShowGUI() {
-        _cameraController = new CameraCapture();
-
+    void createAndShowGUI() {
 
 
         //Create and set up the window.
@@ -361,9 +388,14 @@ public class ScreenUI extends JPanel implements ActionListener {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         //Create and set up the content pane.
-        ScreenUI newContentPane = new ScreenUI(_gameLogic);
-        newContentPane.setOpaque(true); //content panes must be opaque
-        frame.setContentPane(newContentPane);
+
+//        ScreenUI newContentPane = new ScreenUI(_gameLogic);@@@
+//        newContentPane.setOpaque(true); //content panes must be opaque
+//        frame.setContentPane(newContentPane);
+
+//        ScreenUI newContentPane = new ScreenUI(_gameLogic);
+        setOpaque(true); //content panes must be opaque
+        frame.setContentPane(this);
 
         //Display the window.
         frame.pack();
@@ -382,6 +414,38 @@ public class ScreenUI extends JPanel implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
+        for (int i = 0; i < 100; i++) {
+            //            streamFrame = _cameraController.getFrame();
+//            streamFrame.setIcon(_cameraController.getFrame().getIcon());
+//            streamFrame = _cameraController.getFrame();
+////            streamFrame.(_cameraController._bufImage,20,20,20,20,20);
+//            streamFrame = new JLabel("nsklsnlksnsklns");
+//            streamFrame.setVisible(true);
+            streamFrame.setBorder(new LineBorder(Color.black,5));
+            streamFrame.setIcon(_cameraController.getFrame());
+            Mat frame = new Mat();
+
+            if (CameraCapture._video.read(frame)){
+//
+//                BufferedImage image = streamPanel.MatToBufferedImage(frame);
+//
+//                streamPanel.imageUpdate(image, "Original Image", 0, 0);
+
+//                t.window(t.grayscale(image), "Processed Image", 40, 60);
+
+                //t.window(t.loadImage("ImageName"), "Image loaded", 0, 0);
+
+                break;
+            }
+
+
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
         String source = actionEvent.getSource().toString();
         int boxNumber = Integer.parseInt((source.substring("TickToeButton[".length(),source.indexOf(','))));
         System.out.println("User clicked '" + boxNumber + "'");
@@ -396,6 +460,26 @@ public class ScreenUI extends JPanel implements ActionListener {
 //        selectedButton.leftClick();
 //        selectedButton.setBackground(selectedButton.getColor());
     }
+
+
+
+
+
+    public void window(BufferedImage img, String text, int x, int y) {
+        JFrame frame0 = new JFrame();
+        frame0.getContentPane().add(this);
+        frame0.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame0.setTitle(text);
+        frame0.setSize(img.getWidth(), img.getHeight() + 30);
+        frame0.setLocation(x, y);
+        frame0.setVisible(true);
+    }
+
+
+
+
+
+
 
     private void updateLabel(JLabel label_, String message_){
         System.out.println("message_ = "+message_);
