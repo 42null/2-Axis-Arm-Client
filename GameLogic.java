@@ -1,3 +1,6 @@
+import javax.swing.*;
+import javax.swing.border.TitledBorder;
+import java.awt.*;
 import java.util.Random;
 
 /**
@@ -11,7 +14,8 @@ public class GameLogic {
     private boolean _robotIsDeciding = false;
     private boolean _gameIsOver = false;
     private Random _random = new Random();
-    private int _moveNumber = 0;
+    private int _moveNumber = 1;
+    private String _stadiumBannerText = "For future stadium board segment";
 
     enum ComputerPlayStyles{
         RANDOM(0),
@@ -24,6 +28,7 @@ public class GameLogic {
     }
 //GETTERS
     public int getMoveNumber(){return _moveNumber;}
+    public boolean isGameOver(){return _gameIsOver;}
 //END GETTERS
 
 
@@ -45,88 +50,129 @@ public class GameLogic {
             //TODO: Finish this if
         }
 
-        TickToeButton currentButton = _sharedButtons[buttonNumber_];
-        switch(currentButton.getTileOwner()){
-            case(0):
+        String moveResponse = playMove(true, buttonNumber_);
+        /*if(moveResponse != "")*/ displayStatement = moveResponse;
+//        else return "";
+        return moveResponse;
+    }
 
-                currentButton.setOwner(2);
-                currentButton.setColor(Settings.PLAYERS_COLOR);
-                displayStatement = Settings.PLAYER_MOVE_WAS_VALID;
-                _moveNumber++;
-                checkForWin(buttonNumber_);
-                break;
-            case(1):
-                displayStatement = Settings.PLAYER_MOVE_WAS_NOT_VALID_COMPUTER_OWNS;
-                break;
-            case(2):
-                displayStatement = Settings.PLAYER_MOVE_WAS_NOT_VALID_PLAYER_OWNS;
-                break;
+    public String playMove(boolean playerMove_, int buttonPicked_) {//0 for no win, 1 for a win, -1 for unable to obtain location, 2 = game over
+        if (_moveNumber > 8) return "All spaces have been filled";
+
+        String moveResponse = "";
+        int locationsOwner = _sharedButtons[buttonPicked_].getTileOwner();
+        if (locationsOwner == 0) {//Not owned by anyone yet
+            _sharedButtons[buttonPicked_].setOwner(playerMove_? 2:1);
+            _sharedButtons[buttonPicked_].setColor(playerMove_ ? Settings.PLAYERS_COLOR : Settings.COMPUTERS_COLOR);
+            moveResponse = playerMove_? Settings.PLAYER_MOVE_WAS_VALID : "Computer made a move";
+            _moveNumber++;
+            switch (checkForWin(buttonPicked_)) {
+                case (0):// No one won
+                    break;
+                case (1):// Computer won
+                    moveResponse = Settings.GAME_IS_OVER_COMPUTER_WIN;
+                    _gameIsOver = true;
+                    break;
+                case (2):// Player won
+                    moveResponse = Settings.GAME_IS_OVER_PLAYER_WIN;
+                    _gameIsOver = true;
+                    break;
+            }
+        }else if(locationsOwner == (playerMove_ ? 2 : 1)) {//Owned by the player already
+            if(playerMove_) moveResponse = Settings.PLAYER_MOVE_WAS_NOT_VALID_PLAYER_OWNS;
+        }else{//Owned by opposing player
+            if (playerMove_) moveResponse = Settings.PLAYER_MOVE_WAS_NOT_VALID_COMPUTER_OWNS;
         }
 
-        /*
-        "abcdefghijklmnopqrstuvwzyz012345".length(); // 6789"; If it exceeds this amount, it will soft crash
-         */
-        if(displayStatement.length() > 32){
-            //SPLIT UP THE RESPONSE
-//            String[] words = displayStatement.split("\\s+");
-            String[] words = displayStatement.split(" ");
-            displayStatement = "";
-            int goalPerRow = displayStatement.length() / 32;
-            int lengthOfLineCurrently = 0;
-            for (String word: words) {
-                if(lengthOfLineCurrently+word.length()<31){//Space Included
-                    displayStatement+=(" "+word);
-                    lengthOfLineCurrently += word.length()+1;
+        return moveResponse;
+    }
+
+
+    public String playComputerMove(ComputerPlayStyles mode_){
+        int buttonNumber;
+
+//        if(moveResponse != "") displayStatement = moveResponse;
+//        else return "Error: Computer did not write out to this return statement.\"";
+
+        if(mode_ == ComputerPlayStyles.RANDOM){
+            buttonNumber = _random.nextInt(9);
+            while(_sharedButtons[buttonNumber].getTileOwner() != 0) {
+                System.out.println("Attempt at random square was not successfull: \"Already Owned by someone\"");
+                buttonNumber = _random.nextInt(9);
+            }
+            String moveResponse = playMove(false, buttonNumber);
+            return moveResponse;
+        }else{
+        }
+        return "That mode does not exist";
+    }
+
+    /**
+     * Returns an integer representing the win state
+     * @param buttonNumber_
+     * @return 0 for no win,  1  or 2 for a win (the player number)
+     */
+    public int checkForWin(int buttonNumber_){
+        int buttonX = buttonNumber_ % 3;
+        int buttonY = buttonNumber_ / 3;
+        int checkingFor = _sharedButtons[buttonNumber_].getTileOwner();//Should never be 0
+
+        //CHECK HORIZONTAL
+        for(int i=0;i<3;i++){
+            if(_sharedButtons[buttonY*3+i].getTileOwner()==checkingFor){
+                if(i==2){
+                    System.out.println("HORIZONTAL WIN by "+(checkingFor==2?"player":"computer"));
+                    for(int j=0;j<3;j++) { _sharedButtons[buttonY*3+j].setBorder(BorderFactory.createLineBorder(Color.GREEN, 5)); ; }
+                    return checkingFor;
+                }
+            }else{
+                i = 3;
+            }
+        }
+        //CHECK VERTICAL
+        for(int i=0;i<3;i++){
+            if(_sharedButtons[3*i+buttonX].getTileOwner()==checkingFor){
+                if(i==2){
+                    System.out.println("VERTICAL WIN by "+(checkingFor==2?"player":"computer"));
+                    for(int j=0;j<3;j++) { _sharedButtons[3*j+buttonX].setBorder(BorderFactory.createLineBorder(Color.GREEN, 5)); ; }
+                    return checkingFor;
+                }
+            }else{
+                i = 3;
+            }
+        }
+        //CHECK DIAGONAL (\)
+        if(buttonNumber_ % 4 == 0){
+            for(int i=0;i<3;i++){
+                if(_sharedButtons[3*i+i].getTileOwner()==checkingFor){
+                    if(i==2){
+                        System.out.println("DIAGONAL WIN \\ by "+(checkingFor==2?"player":"computer"));
+//                        for(int j=0;i<3;i++) { _sharedButtons[3*i+i].setColor((checkingFor==2? ScreenUI.Borders.WIN_BY_PLAYER_SQUARE:ScreenUI.Borders.WIN_BY_COMPUTER_SQUARE).color); }
+//                        newLook new TickToeButton(Integer.toString(buttonNumber_));
+//                        ScreenUI.Borders winnerBorder = ScreenUI.Borders.WIN_BY_PLAYER_SQUARE;
+                        for(int j=0;j<3;j++) { _sharedButtons[3*j+j].setBorder(BorderFactory.createLineBorder(Color.GREEN, 5)); ; }
+                        return checkingFor;
+                    }
                 }else{
-                    displayStatement+="<br/>"+word;
-                    lengthOfLineCurrently = word.length()+1;
+                    i = 3;
                 }
             }
         }
-        return "<html>"+displayStatement+"</html>";
-    }
-
-    public String playComputerMove(ComputerPlayStyles mode_){
-        if(_moveNumber > 8){
-            return "Game is already over";
-        }
-
-        int buttonNumber = _random.nextInt(9);
-        String displayStatement = "Error: Computer did not write out to this return statement.";
-
-        if(mode_ == ComputerPlayStyles.RANDOM){
-            TickToeButton currentButton = _sharedButtons[buttonNumber];
-            while(currentButton.getTileOwner() != 0) {
-                System.out.println("Attempt at random square was not successfull: \"Already Owned\"");
-                currentButton = _sharedButtons[_random.nextInt(9)];
+        //CHECK DIAGONAL (/)
+        if(buttonNumber_ % 4 == 2){
+            for(int i=0;i<3;i++){
+                if(_sharedButtons[3*i+2-i].getTileOwner()==checkingFor){
+                    System.out.println("i = "+i);
+                    if(i==2){
+                        System.out.println("DIAGONAL WIN / by "+(checkingFor==2?"player":"computer"));
+                        for(int j=0;j<3;j++) { _sharedButtons[3*j+2-j].setBorder(BorderFactory.createLineBorder(Color.GREEN, 5)); ; }
+                        return checkingFor;
+                    }
+                }else{
+                    i = 3;
+                }
             }
-            currentButton.setOwner(1);
-            currentButton.setColor(Settings.COMPUTERS_COLOR);
-            displayStatement = "Computer made a move";
-            _moveNumber++;
         }
-        return displayStatement;
-    }
-
-    public int checkForWin(int buttonNumber_){// 0 for no win,  1 for computer win, 2 for player win
-        TickToeButton currentButton = _sharedButtons[buttonNumber_];
-        int inARow = 0;
-        int buttonX = buttonNumber_ % 3;
-        int buttonY = buttonNumber_ / 3;
-
-
-//        //CHECK ALL HORIZONTAL
-//        for(int i=0;i<3;i++){
-//            for(int j=0;j<3;j++){
-//                switch(currentButton){
-//                    case():
-//                        break;
-//                }
-//            }
-//        }
-
-        System.out.println("X = "+(buttonX+1));
-        System.out.println("Y = "+(buttonY+1));
 
         return 0;
     }
