@@ -1,6 +1,4 @@
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
@@ -36,7 +34,7 @@ public class CameraCapture extends Thread {
             System.out.println("Thread " + this.currentThreadID + " is running");
 
             while(keepLooping){
-                Mat displayMat = lookForCircles(getNewImageFromStream());
+                Mat displayMat = filterForColor(getNewImageFromStream());
                 MatOfByte matOfByte = new MatOfByte();
                 Imgcodecs.imencode(".jpg", displayMat, matOfByte);
                 streamingBox.setIcon(new ImageIcon(ImageIO.read(new ByteArrayInputStream(matOfByte.toArray()))));
@@ -54,7 +52,7 @@ public class CameraCapture extends Thread {
         }
     }
 
-    public Mat lookForCircles(Mat original_){
+    public Mat filterForColor(Mat original_){
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
         Mat processedMat = original_.clone();
@@ -71,14 +69,38 @@ public class CameraCapture extends Thread {
         Imgproc.cvtColor( processedMat, rgb, Imgproc.COLOR_BGRA2RGB );
         Imgproc.cvtColor( rgb, hsv, Imgproc.COLOR_RGB2HSV );
 
-        Core.inRange(rgb, new Scalar(0, 0, 100), new Scalar(100, 100, 255), processedMat);//Now blue
-//        Imgproc.GaussianBlur( processedMat, processedMat, new Size( 25, 25 ), 0, 0 );
+        Core.inRange(rgb, new Scalar(0, 0, 90), new Scalar(90, 90, 255), processedMat);//Now blue
         Mat newMat = new Mat();
         Core.bitwise_not(processedMat, newMat);
-        original_.copyTo(newMat, newMat);
-        //        processedMat.copyTo(original_);
-        return newMat;
+        Core.bitwise_not(newMat, newMat);
+        Mat evenNewMat = new Mat();// = new Mat(processedMat.cols(),processedMat.rows(),1);
+//        Imgproc.floodFill(evenNewMat, evenNewMat, new Point(evenNewMat.cols() + 2, evenNewMat.rows() + 2), new Scalar(255,100,100));
+//        newMat.setTo(new Scalar(0,220,0));
+        original_.copyTo(evenNewMat, newMat);
+        Imgproc.cvtColor(evenNewMat,evenNewMat,Imgproc.COLOR_BGR2Lab);
+        Mat evenEvenNewMat = new Mat();
+        evenNewMat.copyTo(evenEvenNewMat,newMat);
+        evenEvenNewMat.copyTo(original_,newMat);
+
+//
+////        Imgproc.cvtColor(gray, newMat, Imgproc.COLOR_GRAY2BGRA);
+//        Imgproc.cvtColor(newMat, gray, Imgproc.COLOR_GRAY2BGRA);
+//
+//        Mat circles = new Mat();
+//
+//        double cannyThreshhold = 10;
+//        int[] circleSizeRange = {25, 100};
+//        int circleProximity = 2 * circleSizeRange[0];
+//        double circleThreshold = 20;
+//        int accumulatorScale = 2;
+//        Imgproc.HoughCircles(gray, circles, Imgproc.CV_HOUGH_GRADIENT, accumulatorScale, circleProximity, cannyThreshhold, circleThreshold, circleSizeRange[0], circleSizeRange[1]);
+//
+//        return gray;
+        return original_;
     }
+
+
+
 
     public Mat getNewImageFromStream() {
         try {

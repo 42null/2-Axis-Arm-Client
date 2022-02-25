@@ -9,6 +9,7 @@ import java.util.Random;
 
 public class GameLogic {
     private TickToeButton[] _sharedButtons = new TickToeButton[9];
+
 //STATUS OF BOARD
     private boolean _robotIsMoving = false;
     private boolean _robotIsDeciding = false;
