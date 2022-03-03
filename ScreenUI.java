@@ -1,44 +1,3 @@
-/*
- * Copyright (c) 1995, 2008, Oracle and/or its affiliates. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *   - Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *
- *   - Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in the
- *     documentation and/or other materials provided with the distribution.
- *
- *   - Neither the name of Oracle or the names of its
- *     contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
- * IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-/*
- * BoxAlignmentDemo.java requires the following files:
- *   images/middle.gif
- *   images/geek-cght.gif
- *
- * This demo shows how to specify alignments when you're using
- * a BoxLayout for components with maximum sizes and different
- * default alignments.
- */
-
 import org.opencv.core.Mat;
 
 import javax.swing.*;
@@ -47,6 +6,9 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ScreenUI extends JPanel implements ActionListener {
     TickToeButton[] _boardButtons;
@@ -57,11 +19,14 @@ public class ScreenUI extends JPanel implements ActionListener {
     private JLabel _underGameBoard;
     private JPanel totalBox = new JPanel();
 
+    private JTabbedPane tabbedPane = new JTabbedPane();
     private JPanel streamPanel = new JPanel();
     private JLabel tickToeStream = new JLabel("Computer: <Place Status Here>");
-    private JPanel buttonRow = new JPanel();
-    private JTabbedPane tabbedPane = new JTabbedPane();
-
+    private JPanel optionsPannel = new JPanel();
+    private JPanel visionSettings = Setting.initializeSettingsPanel( "Settings",
+            new Setting( Settings.VISION_SETTING_MESSAGE_MIN, 1, 255, CameraCapture.getCircleSizeRange(true) ),//Setting to 0 will crash in an unrecoverable state for the view
+            new Setting( Settings.VISION_SETTING_MESSAGE_MAX, 0, 255, CameraCapture.getCircleSizeRange(false) ),
+            new Setting( Settings.VISION_SETTING_MESSAGE_THRESHOLD, 0, 255, CameraCapture.getCircleThreshold() ));
 
     public enum Borders{
         WIN_BY_COMPUTER_SQUARE(Settings.COMPUTERS_COLOR, 5, true),
@@ -78,6 +43,58 @@ public class ScreenUI extends JPanel implements ActionListener {
         }
     }
 
+    public static class Setting {
+        String title;
+        JLabel titleLabel, valueLabel;
+        public AtomicInteger value;
+        JSlider jComponent;
+
+        public Setting(final String title, final int min, final int max, int value) {
+            this.title = title;
+            this.value = new AtomicInteger(value);
+            titleLabel = new JLabel(title);
+            valueLabel = new JLabel(String.valueOf((this.value.get())));
+            jComponent = new JSlider(min, max, value);
+            int test = 0;
+            jComponent.addChangeListener(e -> {
+                this.value.set(jComponent.getValue());
+                valueLabel.setText("" + this.value.get());
+                CameraCapture.settingWasUpdated(this.title, this.value.get());//TODO: Right now is static, change for future.
+            });
+        }
+
+        public static JPanel initializeSettingsPanel(final String title, final Setting... settings ) {
+            Map<String, Setting> map = new HashMap<>();
+            JPanel returnPanel = new JPanel();
+            try {
+                SwingUtilities.invokeAndWait( new Runnable() {
+                    @Override
+                    public void run() {
+                        returnPanel.setLayout(new GridLayout(0, 3));
+                        for ( Setting setting : settings ) {
+                            map.put( setting.title, setting );
+                            returnPanel.add( setting.titleLabel );
+                            setting.jComponent.setBackground(Settings.CYAN_DARKER);
+                            returnPanel.add( setting.jComponent );
+                            returnPanel.add( setting.valueLabel );
+                        }
+//                        controlerFrame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+//                        controlerFrame.setAlwaysOnTop( false );
+//                        controlerFrame.setContentPane( panel );
+//                        controlerFrame.pack();
+//                        controlerFrame.setVisible( true );
+                        returnPanel.setBackground(Settings.CYAN_DARKER);
+                    }
+                } );
+            }catch(Exception e){
+                e.printStackTrace();
+                returnPanel.add(new JLabel("ERROR: See terminal stackTrace"));
+            }
+            return returnPanel;
+        }
+
+    }
+
     public ScreenUI(GameLogic gameLogic_) {
         super(new BorderLayout());
 
@@ -86,10 +103,11 @@ public class ScreenUI extends JPanel implements ActionListener {
 
         _cameraController = new CameraCapture(tickToeStream);
 
-        buttonRow.setAlignmentY(CENTER_ALIGNMENT);
-        buttonRow.setPreferredSize(new Dimension(1_280,720));
+        optionsPannel.setAlignmentY(CENTER_ALIGNMENT);
+        optionsPannel.setPreferredSize(new Dimension(1_280,720));
         //Use default FlowLayout.
-        buttonRow.add(mainTabVideoFeedBox(false));
+        optionsPannel.add(mainTabVideoBoxWithSettings());
+        visionSettings.setBorder(BorderFactory.createLineBorder(Color.MAGENTA,5));
 
         totalBox = new JPanel();
         totalBox.setBorder(BorderFactory.createLineBorder(Color.GREEN, 3));
@@ -102,13 +120,13 @@ public class ScreenUI extends JPanel implements ActionListener {
         _underGameBoard.setSize(_underGameBoard.getWidth(),_underGameBoard.getHeight()+50);
         totalBox.add(_underGameBoard);
 
-        buttonRow.add(totalBox);
+        optionsPannel.add(totalBox);
 
-        buttonRow.add(streamPanel);
+        optionsPannel.add(streamPanel);
 
-        buttonRow.setBorder(BorderFactory.createLineBorder(Color.ORANGE, 3));
+        optionsPannel.setBorder(BorderFactory.createLineBorder(Color.ORANGE, 3));
 
-        tabbedPane.addTab(Settings.DEFAULT_PAGE_HEADERS[0], buttonRow);
+        tabbedPane.addTab(Settings.DEFAULT_PAGE_HEADERS[0], optionsPannel);
 
         JPanel labelAndComponent = new JPanel();
         tabbedPane.addTab(Settings.DEFAULT_PAGE_HEADERS[1], labelAndComponent);
@@ -124,46 +142,41 @@ public class ScreenUI extends JPanel implements ActionListener {
 
     }
 
-    protected JPanel mainTabVideoFeedBox(boolean changeAlignment) {
+    protected JPanel mainTabVideoBoxWithSettings() {
         JPanel pane = new JPanel();
         pane.setLayout(new GridLayout(3,3));
 
         pane.setBorder(BorderFactory.createTitledBorder("Live Video Feed"));
         pane.setLayout(new BoxLayout(pane, BoxLayout.Y_AXIS));
 
-
-//        tickToeStream = new JLabel();//"Computer: <Place Status Here>", createImageIcon("images/tick-tack-toe_generic.png"));
-
-        tickToeStream.setSize(500,500);
+//        tickToeStream.setSize(500,500);//TODO: Make controllable
         tickToeStream.setBorder(BorderFactory.createLineBorder(Color.BLUE, 5));
         tickToeStream.setVerticalTextPosition(AbstractButton.BOTTOM);
         tickToeStream.setHorizontalTextPosition(AbstractButton.CENTER);
         tickToeStream.setAlignmentX(CENTER_ALIGNMENT);
 
         pane.add(tickToeStream);
-//        GridLayout gridLayout = new GridLayout(5,1);
         GridBagConstraints _bagConstraints = new GridBagConstraints();
-//        pane.setLayout(gridLayout);
 
-        _bagConstraints.weightx = 0.0;                //reset to the default
+        _bagConstraints.weightx = 0.0;//reset to the default
 
-        JButton button1 = new JButton("Grayscale", createImageIcon("images/middle.gif"));
-        JButton button2 = new JButton("Make Move", createImageIcon("images/middle.gif"));
-        JButton button3 = new JButton("Something Else", createImageIcon("images/middle.gif"));
-        JButton button4 = new JButton("Yet Another Button or box", createImageIcon("images/middle.gif"));
+        JButton button1 = new JButton("Grayscale");//, createImageIcon("images/middle.gif"));
+        JButton button2 = new JButton("Make Move");//, createImageIcon("images/middle.gif"));
+        JButton button3 = new JButton("Something Else");//, createImageIcon("images/middle.gif"));
+        JButton button4 = new JButton("Yet Another Button or box");//, createImageIcon("images/middle.gif"));
 
+//SETTINGS
         JPanel optionPane = new JPanel();
-//        optionPane.setBorder(BorderFactory.createTitledBorder("Live Video Feed"));
         optionPane.add(new JLabel("<html><center>Video</center>Options</html>",SwingConstants.CENTER));
         optionPane.add(button1);
         optionPane.add(button2);
         optionPane.add(button3);
         optionPane.add(button4);
-        pane.add(optionPane);
 
+        pane.add(optionPane);
+        pane.add(visionSettings);
         return pane;
     }
-
 
     protected Component makeUnit(Component component,
                                  GridBagLayout gridbag,
@@ -360,8 +373,6 @@ public class ScreenUI extends JPanel implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
-//        tickToeStream.setBorder(new LineBorder(Color.black,5));
-//        tickToeStream.setIcon(_cameraController.getNewImageFromStream());
         Mat frame = new Mat();
 
 
