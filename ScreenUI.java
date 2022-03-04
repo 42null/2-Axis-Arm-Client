@@ -1,11 +1,10 @@
-import org.opencv.core.Mat;
-
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -13,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ScreenUI extends JPanel implements ActionListener {
     TickToeButton[] _boardButtons;
     private static GameLogic _gameLogic;
-    private static CameraCapture _cameraController;
+    private CameraCapture _cameraController;
 
     //MUTABLE LABELS
     private JLabel _underGameBoard;
@@ -26,7 +25,7 @@ public class ScreenUI extends JPanel implements ActionListener {
     private JPanel visionSettings = Setting.initializeSettingsPanel( "Settings",
             new Setting( Settings.VISION_SETTING_MESSAGE_MIN, 1, 255, CameraCapture.getCircleSizeRange(true) ),//Setting to 0 will crash in an unrecoverable state for the view
             new Setting( Settings.VISION_SETTING_MESSAGE_MAX, 0, 255, CameraCapture.getCircleSizeRange(false) ),
-            new Setting( Settings.VISION_SETTING_MESSAGE_THRESHOLD, 0, 255, CameraCapture.getCircleThreshold() ));
+            new Setting( Settings.VISION_SETTING_MESSAGE_THRESHOLD, 1, 255, CameraCapture.getCircleThreshold() ));//Setting to 0 will crash in an unrecoverable state for the view
 
     public enum Borders{
         WIN_BY_COMPUTER_SQUARE(Settings.COMPUTERS_COLOR, 5, true),
@@ -160,19 +159,21 @@ public class ScreenUI extends JPanel implements ActionListener {
 
         _bagConstraints.weightx = 0.0;//reset to the default
 
-        JButton button1 = new JButton("Grayscale");//, createImageIcon("images/middle.gif"));
-        JButton button2 = new JButton("Make Move");//, createImageIcon("images/middle.gif"));
-        JButton button3 = new JButton("Something Else");//, createImageIcon("images/middle.gif"));
-        JButton button4 = new JButton("Yet Another Button or box");//, createImageIcon("images/middle.gif"));
+    //SETTINGS
+        ArrayList<JButton> optionsBarButtons = new ArrayList<>();
+        optionsBarButtons.add(new JButton("Grayscale"));//TODO: Make it grab from a strings file
+        optionsBarButtons.add(new JButton("Colorscale"));
+        optionsBarButtons.add(new JButton("Set Corners"));
+        optionsBarButtons.add(new JButton("Yet Another Button or box"));
 
-//SETTINGS
         JPanel optionPane = new JPanel();
         optionPane.add(new JLabel("<html><center>Video</center>Options</html>",SwingConstants.CENTER));
-        optionPane.add(button1);
-        optionPane.add(button2);
-        optionPane.add(button3);
-        optionPane.add(button4);
-
+        //Add list of buttons and setup their actionListeners
+        for (JButton button: optionsBarButtons) {
+            button.setName(button.getText());
+            button.addActionListener(this);
+            optionPane.add(button);
+        }
         pane.add(optionPane);
         pane.add(visionSettings);
         return pane;
@@ -193,22 +194,22 @@ public class ScreenUI extends JPanel implements ActionListener {
         pane2.setLayout(new BoxLayout(pane2, BoxLayout.Y_AXIS));
 
 
-        JButton button1 = new JButton("Start Game", createImageIcon("images/middle.gif"));
-        JButton button2 = new JButton("Make Move", createImageIcon("images/middle.gif"));
-        JButton button3 = new JButton("Something Else", createImageIcon("images/middle.gif"));
-        JButton button4 = new JButton("Yet Another Button or box", createImageIcon("images/middle.gif"));
-        button1.setVerticalTextPosition(AbstractButton.BOTTOM);
-        button1.setHorizontalTextPosition(AbstractButton.CENTER);
-        button2.setVerticalTextPosition(AbstractButton.BOTTOM);
-        button2.setHorizontalTextPosition(AbstractButton.CENTER);
-        button3.setVerticalTextPosition(AbstractButton.BOTTOM);
-        button3.setHorizontalTextPosition(AbstractButton.CENTER);
-        button4.setVerticalTextPosition(AbstractButton.BOTTOM);
-        button4.setHorizontalTextPosition(AbstractButton.CENTER);
-        pane2.add(button1);
-        pane2.add(button2);
-        pane2.add(button3);
-        pane2.add(button4);
+//        JButton button1 = new JButton("Start Game", createImageIcon("images/middle.gif"));
+//        JButton button2 = new JButton("Make Move", createImageIcon("images/middle.gif"));
+//        JButton button3 = new JButton("Something Else", createImageIcon("images/middle.gif"));
+//        JButton button4 = new JButton("Yet Another Button or box", createImageIcon("images/middle.gif"));
+//        button1.setVerticalTextPosition(AbstractButton.BOTTOM);
+//        button1.setHorizontalTextPosition(AbstractButton.CENTER);
+//        button2.setVerticalTextPosition(AbstractButton.BOTTOM);
+//        button2.setHorizontalTextPosition(AbstractButton.CENTER);
+//        button3.setVerticalTextPosition(AbstractButton.BOTTOM);
+//        button3.setHorizontalTextPosition(AbstractButton.CENTER);
+//        button4.setVerticalTextPosition(AbstractButton.BOTTOM);
+//        button4.setHorizontalTextPosition(AbstractButton.CENTER);
+//        pane2.add(button1);
+//        pane2.add(button2);
+//        pane2.add(button3);
+//        pane2.add(button4);
         return pane2;
     }
 
@@ -373,38 +374,49 @@ public class ScreenUI extends JPanel implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
-        Mat frame = new Mat();
-
 
         String source = actionEvent.getSource().toString();
-        int boxNumber = Integer.parseInt((source.substring("TickToeButton[".length(),source.indexOf(','))));
-        System.out.println("--------------------User clicked '" + boxNumber + "'");
 
-        String moveResponse;
-        if(!_gameLogic.isGameOver()) {
-            if (!(_gameLogic.getMoveNumber() % 2 == 0)) {
-                moveResponse = _gameLogic.leftClickedBoardButton(boxNumber);
-                /*if(moveResponse != "")*/
-                updateLabel(_underGameBoard, moveResponse);
+        //DETECT BUTTON TYPE
+        if(source.startsWith("TickToeButton")){
+
+            int boxNumber = Integer.parseInt((source.substring("TickToeButton[".length(),source.indexOf(','))));
+            System.out.println("--------------------User clicked '" + boxNumber + "'");
+
+            String moveResponse;
+            if(!_gameLogic.isGameOver()) {
+                if (!(_gameLogic.getMoveNumber() % 2 == 0)) {
+                    moveResponse = _gameLogic.leftClickedBoardButton(boxNumber);
+                    /*if(moveResponse != "")*/
+                    updateLabel(_underGameBoard, moveResponse);
+                }
             }
-        }
 
-        if(!_gameLogic.isGameOver()) {
-            if (!(_gameLogic.getMoveNumber() % 2 == 1)) {//Don't run if the player did not make a move
-                moveResponse = _gameLogic.playComputerMove(GameLogic.ComputerPlayStyles.RANDOM);
-                //            System.currentTimeMillis();
-                //            if(moveResponse != ""){
-                updateLabel(_underGameBoard, moveResponse);
+            if(!_gameLogic.isGameOver()) {
+                if (!(_gameLogic.getMoveNumber() % 2 == 1)) {//Don't run if the player did not make a move
+                    moveResponse = _gameLogic.playComputerMove(GameLogic.ComputerPlayStyles.RANDOM);
+                    //            System.currentTimeMillis();
+                    //            if(moveResponse != ""){
+                    updateLabel(_underGameBoard, moveResponse);
 //                }
+                }
             }
+        }else if(source.startsWith("javax.swing.JButton")){
+            System.out.println("source = " + source);
+            if(source.substring(20).startsWith("Grayscale")){
+                System.out.println("test");
+                _cameraController.setOutputDisplay(CameraCapture.DisplayModes.GREYSCALE);
+            }else if(source.substring(20).startsWith("Colorscale")){
+                _cameraController.setOutputDisplay(CameraCapture.DisplayModes.NORMAL);
+            }else if(source.substring(20).startsWith("Set Corners")){
+                _cameraController.detectCorners();
+
+            }
+
         }
-//        selectedButton.setBackground(selectedButton.getColor());
-//        selectedButton.leftClick();
-//        selectedButton.setBackground(selectedButton.getColor());
+
+
     }
-
-
-
 
 
     public void window(BufferedImage img, String text, int x, int y) {

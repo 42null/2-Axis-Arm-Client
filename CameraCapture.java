@@ -1,5 +1,4 @@
 import java.awt.*;
-import java.awt.event.MouseEvent;
 import java.io.ByteArrayInputStream;
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -16,8 +15,16 @@ public class CameraCapture extends Thread {
     private JLabel streamingBox;
     private static int[] circleSizeRange = {20, 50};
     private static int circleThreshold = 70;
+    private static DisplayModes displayType = DisplayModes.NORMAL;
+    private static Point[] detectedCircles;
 
+    enum DisplayModes {
+        NORMAL(1),
+        GREYSCALE(2);
 
+        final int id;
+        DisplayModes(int modeId) { this.id = modeId; }
+    }
 
     //GETTERS
     public long getCurrentThreadID() {return currentThreadID;}
@@ -52,8 +59,13 @@ public class CameraCapture extends Thread {
             default:
                 System.out.println("!!!ERROR!!!: settingWasUpdated was not able to find a setter matching the provided title \""+title_+"\"");
         }
-
     }
+    //TODO: Merge with settingsWasUpdate?
+    public void setOutputDisplay(DisplayModes newId){
+        this.displayType = newId;
+        System.out.println(this.displayType);
+    }
+
     /**
      * Thread run under the main() class
      */
@@ -131,12 +143,22 @@ public class CameraCapture extends Thread {
 
 
         Imgproc.HoughCircles(gray, circles, Imgproc.CV_HOUGH_GRADIENT, accumulatorScale, circleProximity, cannyThreshhold, circleThreshold, circleSizeRange[0], circleSizeRange[1]);
+        
+        
+        Mat returnMat;
+        switch(this.displayType){
+            case NORMAL:
+                returnMat = original_;
+                break;
+            case GREYSCALE:
+                returnMat = gray;
+                break;
+            default:
+                returnMat = original_;
+        }
 
-        // Imgproc.Canny(gray, gray, Math.max(1, cannyThreshhold/2), cannyThreshhold); // approximates internal
-        // HoughCircles processing
-
-
-
+        detectedCircles = new Point[2];//TODO: Make it find corners instead of just using first two points and not run every time
+        int detectedRadius = 0;
         for (int i = 0; i < Math.min(5, circles.cols()); i++) {
             double[] data = circles.get(0, i);
 
@@ -145,19 +167,51 @@ public class CameraCapture extends Thread {
             int r = (int) data[2];
 
             Point center = new Point(x, y);
+            if(i < 2){detectedCircles[i]=new Point(x,y);}
+            if(i == 0){detectedRadius = r;}
+            if(i == 1){detectedRadius+= r; detectedRadius/=2;}
 
-            // all circle outline
 //            Imgproc.circle(overlay, center, (int)r, new Scalar(0,255,0), 3);
-            Imgproc.circle(original_, center, (int)r, new Scalar(Color.MAGENTA.getRed(),Color.MAGENTA.getGreen(),Color.MAGENTA.getBlue()) , 3);
+            Imgproc.circle(returnMat, center, (int)r, new Scalar(Color.MAGENTA.getRed(),Color.MAGENTA.getGreen(),Color.MAGENTA.getBlue()) , 3);
         }
 
-        Imgproc.rectangle(original_, new Point(50,100),new Point(60,110), new Scalar(Settings.CYAN_DARKER.getRed(),Settings.CYAN_DARKER.getGreen(),Settings.CYAN_DARKER.getBlue(), 255), 2);
+//        Imgproc.rectangle(returnMat, new Point(50,100),new Point(60,110), new Scalar(Settings.CYAN_DARKER.getRed(),Settings.CYAN_DARKER.getGreen(),Settings.CYAN_DARKER.getBlue(), 255), 2);
+        if(detectedCircles[0] != null && detectedCircles[1] != null){
+            Point[] tmpPoints = detectedCircles.clone();
 
-        return original_;
+            if(detectedCircles[0].y > detectedCircles[1].y){
+                detectedCircles[0] = tmpPoints[1];
+                detectedCircles[1] = tmpPoints[0];
+            }
+
+            detectedCircles[0].x += detectedRadius+5;
+            detectedCircles[0].y -= detectedRadius+5;
+            detectedCircles[1].x -= detectedRadius+5;
+            detectedCircles[1].y += detectedRadius+5;
+
+            Imgproc.rectangle(returnMat, new Point(detectedCircles[0].x-10,detectedCircles[0].y-10), new Point(detectedCircles[0].x+10,detectedCircles[0].y+10), toScalar(Color.ORANGE), 2);
+            Imgproc.rectangle(returnMat, new Point(detectedCircles[1].x-10,detectedCircles[1].y-10), new Point(detectedCircles[1].x+10,detectedCircles[1].y+10), toScalar(Color.ORANGE), 2);
+
+
+            Imgproc.rectangle(returnMat, new Point(detectedCircles[0].x,detectedCircles[0].y), new Point(detectedCircles[1].x,detectedCircles[1].y), new Scalar(0, 165, 255,50), 0);
+            int width = (int) (detectedCircles[0].x - detectedCircles[1].x);
+            int height = (int) (detectedCircles[0].y - detectedCircles[1].y);
+
+
+            Imgproc.line(returnMat, new Point(detectedCircles[0].x-width/3,detectedCircles[0].y), new Point(detectedCircles[0].x-width/3,detectedCircles[1].y), new Scalar(0, 165, 255,50), 1);
+            Imgproc.line(returnMat, new Point(detectedCircles[0].x-width*2/3,detectedCircles[0].y), new Point(detectedCircles[0].x-width*2/3,detectedCircles[1].y), new Scalar(0, 165, 255,50), 1);
+            Imgproc.line(returnMat, new Point(detectedCircles[1].x,detectedCircles[0].y-height/3), new Point(detectedCircles[0].x,detectedCircles[0].y-height/3), new Scalar(0, 165, 255,50), 1);
+            Imgproc.line(returnMat, new Point(detectedCircles[1].x,detectedCircles[0].y-2*height/3), new Point(detectedCircles[0].x,detectedCircles[0].y-2*height/3), new Scalar(0, 165, 255,50), 1);
+
+        }
+        return returnMat;
     }
 
 
-
+    public void detectCorners(){
+//        detectedCircles
+//        Imgproc.rectangle(returnMat, new Point(detectedCircles[0].x-10,detectedCircles[0].y-10),new Point(detectedCircles[0].x-10,detectedCircles[0].y-10), toScalar(Color.ORANGE), 2);
+    }
 
     public Mat getNewImageFromStream() {
         try {
@@ -173,4 +227,8 @@ public class CameraCapture extends Thread {
 //        return new ImageIcon("CameraCapture did not work");
     }
 
+    public static Scalar toScalar(Color color){//TODO: Move method location
+        return new Scalar(color.getRed(),color.getGreen(),color.getBlue());
+//        return new Scalar(color.getRGB());
+    }
 }
