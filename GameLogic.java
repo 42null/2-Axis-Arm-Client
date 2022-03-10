@@ -1,5 +1,6 @@
+import org.opencv.core.Point;
+
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.util.Random;
 
@@ -9,6 +10,7 @@ import java.util.Random;
 
 public class GameLogic {
     private TickToeButton[] _sharedButtons = new TickToeButton[9];
+    private PhysicalBoardTracker _boardTracker;
 
 //STATUS OF BOARD
     private boolean _robotIsMoving = false;
@@ -17,6 +19,16 @@ public class GameLogic {
     private Random _random = new Random();
     private int _moveNumber = 1;
     private String _stadiumBannerText = "For future stadium board segment";
+
+    public void locatePhysicalLocations(Point[] pointsToSearch) {
+        _boardTracker.detectAndSetAllSpaces(pointsToSearch);
+    }
+
+    public void checkSpaces(Point[] pointsToSearch){
+        _boardTracker.checkSpaces(pointsToSearch);
+    }
+
+
 
     enum ComputerPlayStyles{
         RANDOM(0),
@@ -33,9 +45,8 @@ public class GameLogic {
 //END GETTERS
 
 
-    public GameLogic(){
-//    public GameLogic(ScreenUI screenUI_){
-//        this._screenUI = screenUI_;
+    public GameLogic(PhysicalBoardTracker boardTracker){
+        this._boardTracker = boardTracker;
     }
 
     public TickToeButton[] getBoardButtons(){return _sharedButtons;}
@@ -148,9 +159,6 @@ public class GameLogic {
                 if(_sharedButtons[3*i+i].getTileOwner()==checkingFor){
                     if(i==2){
                         System.out.println("DIAGONAL WIN \\ by "+(checkingFor==2?"player":"computer"));
-//                        for(int j=0;i<3;i++) { _sharedButtons[3*i+i].setColor((checkingFor==2? ScreenUI.Borders.WIN_BY_PLAYER_SQUARE:ScreenUI.Borders.WIN_BY_COMPUTER_SQUARE).color); }
-//                        newLook new TickToeButton(Integer.toString(buttonNumber_));
-//                        ScreenUI.Borders winnerBorder = ScreenUI.Borders.WIN_BY_PLAYER_SQUARE;
                         for(int j=0;j<3;j++) { _sharedButtons[3*j+j].setBorder(BorderFactory.createLineBorder(Color.GREEN, 5)); ; }
                         return checkingFor;
                     }

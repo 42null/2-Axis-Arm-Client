@@ -163,8 +163,9 @@ public class ScreenUI extends JPanel implements ActionListener {
         ArrayList<JButton> optionsBarButtons = new ArrayList<>();
         optionsBarButtons.add(new JButton("Grayscale"));//TODO: Make it grab from a strings file
         optionsBarButtons.add(new JButton("Colorscale"));
-        optionsBarButtons.add(new JButton("Set Corners"));
-        optionsBarButtons.add(new JButton("Yet Another Button or box"));
+        optionsBarButtons.add(new JButton("Toggle Corners"));
+        optionsBarButtons.add(new JButton("Set Positions"));
+        optionsBarButtons.add(new JButton("Check Positions"));
 
         JPanel optionPane = new JPanel();
         optionPane.add(new JLabel("<html><center>Video</center>Options</html>",SwingConstants.CENTER));
@@ -408,9 +409,14 @@ public class ScreenUI extends JPanel implements ActionListener {
                 _cameraController.setOutputDisplay(CameraCapture.DisplayModes.GREYSCALE);
             }else if(source.substring(20).startsWith("Colorscale")){
                 _cameraController.setOutputDisplay(CameraCapture.DisplayModes.NORMAL);
-            }else if(source.substring(20).startsWith("Set Corners")){
-                _cameraController.detectCorners();
-
+            }else if(source.substring(20).startsWith("Toggle Corners")){
+//                _cameraController.displayCorners();
+                _cameraController.keepCorners = !_cameraController.keepCorners;
+            }else if(source.substring(20).startsWith("Set Positions")){
+                _gameLogic.locatePhysicalLocations(_cameraController.getCirclePoints());
+                _cameraController.saveNextCorners=true;
+            }else if(source.substring(20).startsWith("Check Positions")){
+                _gameLogic.checkSpaces(_cameraController.getCirclePoints());
             }
 
         }

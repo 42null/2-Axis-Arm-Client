@@ -3,7 +3,7 @@ import sun.awt.X11.Screen;
 import java.awt.*;
 
 public class DesktopClient {
-    public GameLogic tickTackToeController = new GameLogic();
+    public GameLogic tickTackToeController = new GameLogic(new PhysicalBoardTracker());
 //    ScreenUI screenUI = new ScreenUI(tickTackToeController);
 
 

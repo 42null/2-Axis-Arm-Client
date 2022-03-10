@@ -1,5 +1,7 @@
 import java.awt.*;
 import java.io.ByteArrayInputStream;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
@@ -14,9 +16,14 @@ public class CameraCapture extends Thread {
     private boolean keepLooping = false;//TODO: Switch to interval
     private JLabel streamingBox;
     private static int[] circleSizeRange = {20, 50};
-    private static int circleThreshold = 70;
+    private static int circleThreshold = 67;//70;
     private static DisplayModes displayType = DisplayModes.NORMAL;
-    private static Point[] detectedCircles;
+    public static Point[] detectedCorners = new Point[2];//TODO: Change
+    private static Point[] allCircleLocations;
+    private boolean overlayCorners = true;
+    public boolean keepCorners = false;
+    public static Point[] savedCorners = new Point[2];
+    public static boolean saveNextCorners = false;
 
     enum DisplayModes {
         NORMAL(1),
@@ -30,6 +37,7 @@ public class CameraCapture extends Thread {
     public long getCurrentThreadID() {return currentThreadID;}
     public static int getCircleSizeRange(boolean isMin_) {return circleSizeRange[ isMin_ ? 0:1 ];}
     public static int getCircleThreshold() {return circleThreshold;}
+    public Point[] getCirclePoints() {return allCircleLocations;}
     //END GETTERS
     //SETTERS
     public static void changeCircleMinRadius(int newLow_) {circleSizeRange[0]=newLow_;}
@@ -114,7 +122,7 @@ public class CameraCapture extends Thread {
         Imgproc.cvtColor( processedMat, rgb, Imgproc.COLOR_BGRA2RGB );
         Imgproc.cvtColor( rgb, hsv, Imgproc.COLOR_RGB2HSV );
 
-        Core.inRange(rgb, new Scalar(0, 0, 90), new Scalar(90, 90, 255), processedMat);//Now blue
+        Core.inRange(rgb, new Scalar(0, 0, 90), new Scalar(90, 100, 255), processedMat);//Now blue
         Mat newMat = new Mat();
         Core.bitwise_not(processedMat, newMat);
         Core.bitwise_not(newMat, newMat);
@@ -130,6 +138,7 @@ public class CameraCapture extends Thread {
 
         // Imgproc.GaussianBlur(gray, gray, new Size(20, 20), 1);
         gray = processedMat;
+        Imgproc.GaussianBlur(gray, gray, new Size(25, 25), 0, 0);
         Imgproc.GaussianBlur(gray, gray, new Size(25, 25), 0, 0);
 
 
@@ -156,10 +165,11 @@ public class CameraCapture extends Thread {
             default:
                 returnMat = original_;
         }
+        detectedCorners = new Point[2];//TODO: Make it find corners instead of just using first two points and not run every time
 
-        detectedCircles = new Point[2];//TODO: Make it find corners instead of just using first two points and not run every time
         int detectedRadius = 0;
-        for (int i = 0; i < Math.min(5, circles.cols()); i++) {
+        allCircleLocations = new Point[circles.cols()];
+        for (int i = 0; i < circles.cols(); i++) {
             double[] data = circles.get(0, i);
 
             int x = (int) data[0];
@@ -167,50 +177,97 @@ public class CameraCapture extends Thread {
             int r = (int) data[2];
 
             Point center = new Point(x, y);
-            if(i < 2){detectedCircles[i]=new Point(x,y);}
+            if(i < 2){
+                detectedCorners[i]=new Point(x,y);
+
+                if(i==1){
+                    if(detectedCorners[0].y < detectedCorners[1].y){
+                        Point tmpPoint = detectedCorners[0];
+                        detectedCorners[0] = detectedCorners[1];
+                        detectedCorners[1] = tmpPoint;
+                    }
+                }
+            }
             if(i == 0){detectedRadius = r;}
             if(i == 1){detectedRadius+= r; detectedRadius/=2;}
 
 //            Imgproc.circle(overlay, center, (int)r, new Scalar(0,255,0), 3);
             Imgproc.circle(returnMat, center, (int)r, new Scalar(Color.MAGENTA.getRed(),Color.MAGENTA.getGreen(),Color.MAGENTA.getBlue()) , 3);
+
+            //Add to saved posistions
+            allCircleLocations[i] = center;
         }
 
-//        Imgproc.rectangle(returnMat, new Point(50,100),new Point(60,110), new Scalar(Settings.CYAN_DARKER.getRed(),Settings.CYAN_DARKER.getGreen(),Settings.CYAN_DARKER.getBlue(), 255), 2);
-        if(detectedCircles[0] != null && detectedCircles[1] != null){
-            Point[] tmpPoints = detectedCircles.clone();
+        Imgproc.circle(returnMat, new Point(407, 203), 2, new Scalar(Color.MAGENTA.getRed(),Color.MAGENTA.getGreen(),Color.MAGENTA.getBlue()) , 3);
 
-            if(detectedCircles[0].y > detectedCircles[1].y){
-                detectedCircles[0] = tmpPoints[1];
-                detectedCircles[1] = tmpPoints[0];
+        if(!keepCorners && detectedCorners[0]!=null && detectedCorners[1]!=null){
+            detectedCorners[0].x-=25;
+            detectedCorners[0].y+=25;
+            detectedCorners[1].x+=25;
+            detectedCorners[1].y-=25;
+        }
+
+        if(saveNextCorners && detectedCorners[0]!=null && detectedCorners[1]!=null){
+            savedCorners = detectedCorners.clone();
+            saveNextCorners = false;
+        }
+//        Imgproc.rectangle(returnMat, new Point(50,100),new Point(60,110), new Scalar(Settings.CYAN_DARKER.getRed(),Settings.CYAN_DARKER.getGreen(),Settings.CYAN_DARKER.getBlue(), 255), 2);
+
+        if(savedCorners[0]!=null && savedCorners[1]!=null && overlayCorners){
+            returnMat = drawOnCorners(returnMat, savedCorners);
+        }else if(detectedCorners[0] != null && detectedCorners[1] != null && overlayCorners){
+            if(!keepCorners){
+                returnMat = drawOnCorners(returnMat, detectedCorners);
             }
 
-            detectedCircles[0].x += detectedRadius+5;
-            detectedCircles[0].y -= detectedRadius+5;
-            detectedCircles[1].x -= detectedRadius+5;
-            detectedCircles[1].y += detectedRadius+5;
-
-            Imgproc.rectangle(returnMat, new Point(detectedCircles[0].x-10,detectedCircles[0].y-10), new Point(detectedCircles[0].x+10,detectedCircles[0].y+10), toScalar(Color.ORANGE), 2);
-            Imgproc.rectangle(returnMat, new Point(detectedCircles[1].x-10,detectedCircles[1].y-10), new Point(detectedCircles[1].x+10,detectedCircles[1].y+10), toScalar(Color.ORANGE), 2);
-
-
-            Imgproc.rectangle(returnMat, new Point(detectedCircles[0].x,detectedCircles[0].y), new Point(detectedCircles[1].x,detectedCircles[1].y), new Scalar(0, 165, 255,50), 0);
-            int width = (int) (detectedCircles[0].x - detectedCircles[1].x);
-            int height = (int) (detectedCircles[0].y - detectedCircles[1].y);
-
-
-            Imgproc.line(returnMat, new Point(detectedCircles[0].x-width/3,detectedCircles[0].y), new Point(detectedCircles[0].x-width/3,detectedCircles[1].y), new Scalar(0, 165, 255,50), 1);
-            Imgproc.line(returnMat, new Point(detectedCircles[0].x-width*2/3,detectedCircles[0].y), new Point(detectedCircles[0].x-width*2/3,detectedCircles[1].y), new Scalar(0, 165, 255,50), 1);
-            Imgproc.line(returnMat, new Point(detectedCircles[1].x,detectedCircles[0].y-height/3), new Point(detectedCircles[0].x,detectedCircles[0].y-height/3), new Scalar(0, 165, 255,50), 1);
-            Imgproc.line(returnMat, new Point(detectedCircles[1].x,detectedCircles[0].y-2*height/3), new Point(detectedCircles[0].x,detectedCircles[0].y-2*height/3), new Scalar(0, 165, 255,50), 1);
-
         }
+
+
         return returnMat;
     }
 
+    public Mat drawOnCorners(Mat mat, Point[] corners){
 
-    public void detectCorners(){
-//        detectedCircles
-//        Imgproc.rectangle(returnMat, new Point(detectedCircles[0].x-10,detectedCircles[0].y-10),new Point(detectedCircles[0].x-10,detectedCircles[0].y-10), toScalar(Color.ORANGE), 2);
+        Point[] tmpPoints = corners.clone();
+
+        if(corners[1].y > corners[0].y){
+            corners[0] = tmpPoints[1];
+            corners[1] = tmpPoints[0];
+        }
+
+        Imgproc.rectangle(mat, new Point(corners[0].x-10, corners[0].y-10), new Point(corners[0].x+10, corners[0].y+10), toScalar(Color.ORANGE), 2);
+        Imgproc.rectangle(mat, new Point(corners[1].x-10, corners[1].y-10), new Point(corners[1].x+10, corners[1].y+10), toScalar(Color.ORANGE), 2);
+
+        Imgproc.rectangle(mat, new Point(corners[0].x, corners[0].y), new Point(corners[1].x, corners[1].y), new Scalar(0, 165, 255,50), 0);
+
+        int width = (int) (corners[0].x - corners[1].x);
+        int height = (int) (corners[0].y - corners[1].y);
+
+
+        Imgproc.line(mat, new Point(corners[0].x-width/3, corners[0].y), new Point(corners[0].x-width/3, corners[1].y), new Scalar(0, 165, 255,50), 1);
+        Imgproc.line(mat, new Point(corners[0].x-width*2/3, corners[0].y), new Point(corners[0].x-width*2/3, corners[1].y), new Scalar(0, 165, 255,50), 1);
+        Imgproc.line(mat, new Point(corners[1].x, corners[0].y-height/3), new Point(corners[0].x, corners[0].y-height/3), new Scalar(0, 165, 255,50), 1);
+        Imgproc.line(mat, new Point(corners[1].x, corners[0].y-2*height/3), new Point(corners[0].x, corners[0].y-2*height/3), new Scalar(0, 165, 255,50), 1);
+
+
+        Imgproc.rectangle(mat, new Point(corners[1].x-2*width/3.5, corners[0].y), new Point(corners[1].x-width/3.5, corners[0].y-height/3), new Scalar(20,20,200,50), 6);
+
+
+
+        Imgproc.rectangle(mat, new Point(corners[1].x-2*width/3.5, corners[0].y), new Point(corners[1].x-width/3.5, corners[1].y), new Scalar(255, 165, 255,50), 1);
+        Imgproc.line(mat, new Point(corners[1].x-2*width/3.5, corners[0].y-height/3), new Point(corners[1].x-width/3.5, corners[0].y-height/3), new Scalar(255, 165, 255,50), 1);
+        Imgproc.line(mat, new Point(corners[1].x-2*width/3.5, corners[0].y-2*height/3), new Point(corners[1].x-width/3.5, corners[0].y-2*height/3), new Scalar(255, 165, 255,50), 1);
+
+        Imgproc.rectangle(mat, new Point(corners[0].x+width/4, corners[0].y), new Point(corners[0].x+2*width/3.5, corners[1].y), new Scalar(255, 165, 255,50), 1);
+        Imgproc.line(mat, new Point(corners[0].x+width/4, corners[0].y-height/3), new Point(corners[0].x+2*width/3.5, corners[0].y-height/3), new Scalar(255, 165, 255,50), 1);
+        Imgproc.line(mat, new Point(corners[0].x+width/4, corners[0].y-2*height/3), new Point(corners[0].x+2*width/3.5, corners[0].y-2*height/3), new Scalar(255, 165, 255,50), 1);
+
+        return mat;
+    }
+
+
+    public void toggleDisplayCorners(){
+        overlayCorners = !overlayCorners;
     }
 
     public Mat getNewImageFromStream() {
