@@ -1,3 +1,5 @@
+import org.opencv.core.Point;
+
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
@@ -403,7 +405,7 @@ public class ScreenUI extends JPanel implements ActionListener {
                 }
             }
         }else if(source.startsWith("javax.swing.JButton")){
-            System.out.println("source = " + source);
+//            System.out.println("source = " + source);
             if(source.substring(20).startsWith("Grayscale")){
                 System.out.println("test");
                 _cameraController.setOutputDisplay(CameraCapture.DisplayModes.GREYSCALE);
@@ -413,10 +415,21 @@ public class ScreenUI extends JPanel implements ActionListener {
 //                _cameraController.displayCorners();
                 _cameraController.keepCorners = !_cameraController.keepCorners;
             }else if(source.substring(20).startsWith("Set Positions")){
-                _gameLogic.locatePhysicalLocations(_cameraController.getCirclePoints());
+//                _gameLogic.locatePhysicalLocations(_cameraController.getCirclePoints(), _cameraController.getCircleDimensions().width, _cameraController.getCircleDimensions().height);
+                _gameLogic.locatePhysicalLocations(_cameraController.getCirclePoints(), 30, 30);
                 _cameraController.saveNextCorners=true;
             }else if(source.substring(20).startsWith("Check Positions")){
-                _gameLogic.checkSpaces(_cameraController.getCirclePoints());
+//                ArrayList<org.opencv.core.Point> combinedFrames = new ArrayList<>();
+//                for (int i = 0; i < 5; i++) {
+//                    org.opencv.core.Point[] tmpFrameLocations = _cameraController.getCirclePoints();
+//                    for (int j = 0; j < tmpFrameLocations.length; j++) {
+//
+//                        combinedFrames.add(tmpFrameLocations[j]);
+//                    }
+//                }
+//                _gameLogic.checkSpaces((org.opencv.core.Point[]) combinedFrames.toArray());
+                _gameLogic.checkSpaces( _cameraController.getCirclePoints());
+
             }
 
         }

@@ -20,6 +20,7 @@ public class CameraCapture extends Thread {
     private static DisplayModes displayType = DisplayModes.NORMAL;
     public static Point[] detectedCorners = new Point[2];//TODO: Change
     private static Point[] allCircleLocations;
+    private static Dimension circleDimensions = new Dimension(25,25);
     private boolean overlayCorners = true;
     public boolean keepCorners = false;
     public static Point[] savedCorners = new Point[2];
@@ -38,6 +39,7 @@ public class CameraCapture extends Thread {
     public static int getCircleSizeRange(boolean isMin_) {return circleSizeRange[ isMin_ ? 0:1 ];}
     public static int getCircleThreshold() {return circleThreshold;}
     public Point[] getCirclePoints() {return allCircleLocations;}
+    public Dimension getCircleDimensions() {return circleDimensions;}
     //END GETTERS
     //SETTERS
     public static void changeCircleMinRadius(int newLow_) {circleSizeRange[0]=newLow_;}
@@ -198,7 +200,7 @@ public class CameraCapture extends Thread {
             allCircleLocations[i] = center;
         }
 
-        Imgproc.circle(returnMat, new Point(407, 203), 2, new Scalar(Color.MAGENTA.getRed(),Color.MAGENTA.getGreen(),Color.MAGENTA.getBlue()) , 3);
+        Imgproc.rectangle(returnMat, new Point(198, 210), new Point(168, 180), new Scalar(Color.ORANGE.getRed(),Color.ORANGE.getGreen(),Color.ORANGE.getBlue()) , 3);
 
         if(!keepCorners && detectedCorners[0]!=null && detectedCorners[1]!=null){
             detectedCorners[0].x-=25;
@@ -243,6 +245,7 @@ public class CameraCapture extends Thread {
         int width = (int) (corners[0].x - corners[1].x);
         int height = (int) (corners[0].y - corners[1].y);
 
+        circleDimensions = new Dimension(width, height);
 
         Imgproc.line(mat, new Point(corners[0].x-width/3, corners[0].y), new Point(corners[0].x-width/3, corners[1].y), new Scalar(0, 165, 255,50), 1);
         Imgproc.line(mat, new Point(corners[0].x-width*2/3, corners[0].y), new Point(corners[0].x-width*2/3, corners[1].y), new Scalar(0, 165, 255,50), 1);

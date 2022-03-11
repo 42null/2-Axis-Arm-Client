@@ -20,8 +20,8 @@ public class GameLogic {
     private int _moveNumber = 1;
     private String _stadiumBannerText = "For future stadium board segment";
 
-    public void locatePhysicalLocations(Point[] pointsToSearch) {
-        _boardTracker.detectAndSetAllSpaces(pointsToSearch);
+    public void locatePhysicalLocations(Point[] pointsToSearch, int width, int height) {
+        _boardTracker.detectAndSetAllSpaces(pointsToSearch, width, height);
     }
 
     public void checkSpaces(Point[] pointsToSearch){
