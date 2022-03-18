@@ -416,7 +416,12 @@ public class ScreenUI extends JPanel implements ActionListener {
                 _cameraController.keepCorners = !_cameraController.keepCorners;
             }else if(source.substring(20).startsWith("Set Positions")){
 //                _gameLogic.locatePhysicalLocations(_cameraController.getCirclePoints(), _cameraController.getCircleDimensions().width, _cameraController.getCircleDimensions().height);
-                _gameLogic.locatePhysicalLocations(_cameraController.getCirclePoints(), 30, 30);
+                if(_cameraController.getSavedCorners()[1]!=null){
+                    _gameLogic.locatePhysicalLocations(_cameraController.getSavedCorners(), 35, 35);
+                }
+//                Point[] p = _cameraController.getCirclePoints();
+//                System.out.println(p[0].x+","+p[0].y);
+//                System.out.println(p[1].x+","+p[1].y);
                 _cameraController.saveNextCorners=true;
             }else if(source.substring(20).startsWith("Check Positions")){
 //                ArrayList<org.opencv.core.Point> combinedFrames = new ArrayList<>();
@@ -428,8 +433,9 @@ public class ScreenUI extends JPanel implements ActionListener {
 //                    }
 //                }
 //                _gameLogic.checkSpaces((org.opencv.core.Point[]) combinedFrames.toArray());
-                _gameLogic.checkSpaces( _cameraController.getCirclePoints());
-
+                if(_cameraController.getCirclePoints()[1]!=null) {
+                    _gameLogic.checkSpaces(_cameraController.getCirclePoints());
+                }
             }
 
         }

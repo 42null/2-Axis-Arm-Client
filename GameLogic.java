@@ -171,7 +171,6 @@ public class GameLogic {
         if(buttonNumber_ % 4 == 2){
             for(int i=0;i<3;i++){
                 if(_sharedButtons[3*i+2-i].getTileOwner()==checkingFor){
-                    System.out.println("i = "+i);
                     if(i==2){
                         System.out.println("DIAGONAL WIN / by "+(checkingFor==2?"player":"computer"));
                         for(int j=0;j<3;j++) { _sharedButtons[3*j+2-j].setBorder(BorderFactory.createLineBorder(Color.GREEN, 5)); ; }

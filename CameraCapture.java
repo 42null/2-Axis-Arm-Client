@@ -16,10 +16,10 @@ public class CameraCapture extends Thread {
     private boolean keepLooping = false;//TODO: Switch to interval
     private JLabel streamingBox;
     private static int[] circleSizeRange = {20, 50};
-    private static int circleThreshold = 67;//70;
+    private static int circleThreshold = 70;//67
     private static DisplayModes displayType = DisplayModes.NORMAL;
     public static Point[] detectedCorners = new Point[2];//TODO: Change
-    private static Point[] allCircleLocations;
+    private static Point[] allCircleLocations = null;
     private static Dimension circleDimensions = new Dimension(25,25);
     private boolean overlayCorners = true;
     public boolean keepCorners = false;
@@ -39,6 +39,7 @@ public class CameraCapture extends Thread {
     public static int getCircleSizeRange(boolean isMin_) {return circleSizeRange[ isMin_ ? 0:1 ];}
     public static int getCircleThreshold() {return circleThreshold;}
     public Point[] getCirclePoints() {return allCircleLocations;}
+    public Point[] getSavedCorners() {return savedCorners;}
     public Dimension getCircleDimensions() {return circleDimensions;}
     //END GETTERS
     //SETTERS
@@ -197,10 +198,9 @@ public class CameraCapture extends Thread {
             Imgproc.circle(returnMat, center, (int)r, new Scalar(Color.MAGENTA.getRed(),Color.MAGENTA.getGreen(),Color.MAGENTA.getBlue()) , 3);
 
             //Add to saved posistions
-            allCircleLocations[i] = center;
+            allCircleLocations[i] = center.clone();//TODO:
         }
 
-        Imgproc.rectangle(returnMat, new Point(198, 210), new Point(168, 180), new Scalar(Color.ORANGE.getRed(),Color.ORANGE.getGreen(),Color.ORANGE.getBlue()) , 3);
 
         if(!keepCorners && detectedCorners[0]!=null && detectedCorners[1]!=null){
             detectedCorners[0].x-=25;
@@ -214,16 +214,20 @@ public class CameraCapture extends Thread {
             saveNextCorners = false;
         }
 //        Imgproc.rectangle(returnMat, new Point(50,100),new Point(60,110), new Scalar(Settings.CYAN_DARKER.getRed(),Settings.CYAN_DARKER.getGreen(),Settings.CYAN_DARKER.getBlue(), 255), 2);
+//        Imgproc.rectangle(returnMat, new Point(345.0, 55.0),new Point(345.0, 55.0), new Scalar(255,255,255,255), 5);//@@@
+        Imgproc.rectangle(returnMat, new Point(336.0,179.0),new Point(336.0,179.0), new Scalar(255,255,255,255), 5);
 
         if(savedCorners[0]!=null && savedCorners[1]!=null && overlayCorners){
             returnMat = drawOnCorners(returnMat, savedCorners);
+            if(PhysicalBoardTracker._spaces[0]!=null){
+                PhysicalBoardTracker.cheatingBoundsOverlay(returnMat);
+            }
         }else if(detectedCorners[0] != null && detectedCorners[1] != null && overlayCorners){
             if(!keepCorners){
                 returnMat = drawOnCorners(returnMat, detectedCorners);
             }
 
         }
-
 
         return returnMat;
     }
