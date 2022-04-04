@@ -5,6 +5,8 @@ import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -156,7 +158,20 @@ public class ScreenUI extends JPanel implements ActionListener {
         tickToeStream.setHorizontalTextPosition(AbstractButton.CENTER);
         tickToeStream.setAlignmentX(CENTER_ALIGNMENT);
 
+        JLabel mouseCoordinate = new JLabel("Mouse Coordinate: ");
+        tickToeStream.addMouseListener(new MouseAdapter() {//TODO: Move?
+            public void mouseClicked(MouseEvent me) {
+                mouseCoordinate.setText("Mouse Coordinate: ("+me.getX()+","+me.getY()+")");   // No more compilation error here
+            }
+        });
         pane.add(tickToeStream);
+//TODO: Not working
+mouseCoordinate.setVerticalTextPosition(AbstractButton.TOP);
+mouseCoordinate.setHorizontalTextPosition(AbstractButton.LEFT);
+mouseCoordinate.setAlignmentX(LEFT_ALIGNMENT);
+mouseCoordinate.setBackground(Settings.PLAIN_GREEN);
+        pane.add(mouseCoordinate);
+
         GridBagConstraints _bagConstraints = new GridBagConstraints();
 
         _bagConstraints.weightx = 0.0;//reset to the default
@@ -417,7 +432,7 @@ public class ScreenUI extends JPanel implements ActionListener {
             }else if(source.substring(20).startsWith("Set Positions")){
 //                _gameLogic.locatePhysicalLocations(_cameraController.getCirclePoints(), _cameraController.getCircleDimensions().width, _cameraController.getCircleDimensions().height);
                 if(_cameraController.getSavedCorners()[1]!=null){
-                    _gameLogic.locatePhysicalLocations(_cameraController.getSavedCorners(), 35, 35);
+                    _gameLogic.locatePhysicalLocations(_cameraController.getSavedCorners(), Math.abs(_cameraController.getCircleDimensions().width), _cameraController.getCircleDimensions().height);
                 }
 //                Point[] p = _cameraController.getCirclePoints();
 //                System.out.println(p[0].x+","+p[0].y);
@@ -433,7 +448,8 @@ public class ScreenUI extends JPanel implements ActionListener {
 //                    }
 //                }
 //                _gameLogic.checkSpaces((org.opencv.core.Point[]) combinedFrames.toArray());
-                if(_cameraController.getCirclePoints()[1]!=null) {
+                if(_cameraController.getCirclePoints()!=null) {
+                    System.out.println("running .checkSpaces()");
                     _gameLogic.checkSpaces(_cameraController.getCirclePoints());
                 }
             }

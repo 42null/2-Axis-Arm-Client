@@ -20,10 +20,11 @@ public class CameraCapture extends Thread {
     private static DisplayModes displayType = DisplayModes.NORMAL;
     public static Point[] detectedCorners = new Point[2];//TODO: Change
     private static Point[] allCircleLocations = null;
-    private static Dimension circleDimensions = new Dimension(25,25);
+    private static Dimension circleDimensions = new Dimension(35,35);
     private boolean overlayCorners = true;
     public boolean keepCorners = false;
     public static Point[] savedCorners = new Point[2];
+    public static Dimension savedCircleDimensions = new Dimension();
     public static boolean saveNextCorners = false;
 
     enum DisplayModes {
@@ -182,6 +183,8 @@ public class CameraCapture extends Thread {
             Point center = new Point(x, y);
             if(i < 2){
                 detectedCorners[i]=new Point(x,y);
+                circleDimensions.width = 2*r;//TODO: Make work with circles
+                circleDimensions.height = 2*r;//TODO: Make work with circles
 
                 if(i==1){
                     if(detectedCorners[0].y < detectedCorners[1].y){
@@ -197,6 +200,10 @@ public class CameraCapture extends Thread {
 //            Imgproc.circle(overlay, center, (int)r, new Scalar(0,255,0), 3);
             Imgproc.circle(returnMat, center, (int)r, new Scalar(Color.MAGENTA.getRed(),Color.MAGENTA.getGreen(),Color.MAGENTA.getBlue()) , 3);
 
+            //InnerArea
+            if(false && i == 1)
+                Imgproc.rectangle(returnMat,detectedCorners[0], detectedCorners[1], new Scalar(150,150,150,150), -1);
+
             //Add to saved posistions
             allCircleLocations[i] = center.clone();//TODO:
         }
@@ -211,14 +218,21 @@ public class CameraCapture extends Thread {
 
         if(saveNextCorners && detectedCorners[0]!=null && detectedCorners[1]!=null){
             savedCorners = detectedCorners.clone();
+            savedCircleDimensions = new Dimension(circleDimensions.width,circleDimensions.height);//TODO: find a better way
             saveNextCorners = false;
         }
 //        Imgproc.rectangle(returnMat, new Point(50,100),new Point(60,110), new Scalar(Settings.CYAN_DARKER.getRed(),Settings.CYAN_DARKER.getGreen(),Settings.CYAN_DARKER.getBlue(), 255), 2);
-//        Imgproc.rectangle(returnMat, new Point(345.0, 55.0),new Point(345.0, 55.0), new Scalar(255,255,255,255), 5);//@@@
-        Imgproc.rectangle(returnMat, new Point(336.0,179.0),new Point(336.0,179.0), new Scalar(255,255,255,255), 5);
+//        Imgproc.rectangle(returnMat, new Point(156.0,171.0),new Point(206.0,221.0), new Scalar(255,255,0,255), 5);//@@@
+
+
+        Imgproc.circle(returnMat, new Point(171.0, 315.0), 10, new Scalar(0,255,255,255), 5);//Yellow Ring
+        Imgproc.circle(returnMat, new Point(299.0, 181.0), 10, new Scalar(0,255,255,255), 5);//Yellow Ring
+
+
 
         if(savedCorners[0]!=null && savedCorners[1]!=null && overlayCorners){
-            returnMat = drawOnCorners(returnMat, savedCorners);
+            Point[] withExtraBorderSavedCorners = new Point[]{new Point(savedCorners[0].x-savedCircleDimensions.width*.1, savedCorners[0].y+savedCircleDimensions.height*.1), new Point(savedCorners[1].x+savedCircleDimensions.width*.1,savedCorners[1].y-savedCircleDimensions.height*.1)};
+            returnMat = drawOnCorners(returnMat, withExtraBorderSavedCorners);
             if(PhysicalBoardTracker._spaces[0]!=null){
                 PhysicalBoardTracker.cheatingBoundsOverlay(returnMat);
             }
@@ -248,8 +262,6 @@ public class CameraCapture extends Thread {
 
         int width = (int) (corners[0].x - corners[1].x);
         int height = (int) (corners[0].y - corners[1].y);
-
-        circleDimensions = new Dimension(width, height);
 
         Imgproc.line(mat, new Point(corners[0].x-width/3, corners[0].y), new Point(corners[0].x-width/3, corners[1].y), new Scalar(0, 165, 255,50), 1);
         Imgproc.line(mat, new Point(corners[0].x-width*2/3, corners[0].y), new Point(corners[0].x-width*2/3, corners[1].y), new Scalar(0, 165, 255,50), 1);

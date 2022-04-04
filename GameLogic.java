@@ -19,13 +19,23 @@ public class GameLogic {
     private Random _random = new Random();
     private int _moveNumber = 1;
     private String _stadiumBannerText = "For future stadium board segment";
+    private int currentColorBeingLookedAt = 2;
 
     public void locatePhysicalLocations(Point[] pointsToSearch, int width, int height) {
         _boardTracker.detectAndSetAllSpaces(pointsToSearch, width, height);
     }
 
     public void checkSpaces(Point[] pointsToSearch){
-        _boardTracker.checkSpaces(pointsToSearch);
+        int[] foundTiles = _boardTracker.checkSpaces(pointsToSearch).stream().mapToInt(i -> i).toArray();
+        for (int detectedSpace: foundTiles) {
+            if(currentColorBeingLookedAt == 2){
+                for (int i = 0; i < 9; i++) {
+
+                    _sharedButtons[detectedSpace].setOwner(2);
+                }
+            }
+        }
+
     }
 
 

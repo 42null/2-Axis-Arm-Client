@@ -44,6 +44,16 @@ public class TickToeButton extends JButton {
         }
         public void setOwner(int newOwner_){
                 _toggleStageSelected=newOwner_;
+                switch(getTileOwner()){
+                        case 1:
+                                setColor(Settings.COMPUTERS_COLOR);
+                                break;
+                        case 2:
+                                setColor(Settings.PLAYERS_COLOR);
+                                break;
+                        default:
+                                setColor(Settings.STARTING_COLOR);
+                }
         }
 //END SETTERS
 
