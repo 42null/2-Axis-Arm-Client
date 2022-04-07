@@ -2,7 +2,6 @@ import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
-import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 
@@ -17,7 +16,7 @@ public class PhysicalBoardTracker {
 [11]  [6][7][8]  [14]
 
 */
-    public static PhysicalSpace[] _spaces = new PhysicalSpace[15]; //TODO: Make not static and private once cheater bounds view is finished
+    public static PhysicalSpace[] _physicalSpaces = new PhysicalSpace[15]; //TODO: Make not static and private once cheater bounds view is finished
 
     class PhysicalSpace {
         private int storageType = 0;
@@ -41,6 +40,10 @@ public class PhysicalBoardTracker {
             return ownerValue;
         }
 //        public void setOwner(int newOwner){ownerValue = newOwner;}
+        public int getPosition() {
+            return position;
+        }
+
 
         public void setBorderArea(org.opencv.core.Point topRight, org.opencv.core.Point bottomLeft) {
 
@@ -75,7 +78,7 @@ public class PhysicalBoardTracker {
 
     public int getNextAvailable(int owner_){//0 for empty, 1 for computer, 2 for player
         for(int i = 0; i < 5; i++) {//TODO: Make check owner side first
-            if(_spaces[i].getOwner()==owner_){
+            if(_physicalSpaces[i].getOwner()==owner_){
                 return i;
             }
         }
@@ -89,7 +92,7 @@ public class PhysicalBoardTracker {
     public void detectAndSetAllSpaces(org.opencv.core.Point[] pointsToLook, int width, int height){
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                _spaces[i*3+j] = new PhysicalSpace(i*3+j);
+                _physicalSpaces[i*3+j] = new PhysicalSpace(i*3+j);
                 int widthCorners = (int) Math.round((pointsToLook[1].x-pointsToLook[0].x));
                 int heightCorners = (int) Math.round((pointsToLook[1].y-pointsToLook[0].y));
 
@@ -103,7 +106,7 @@ public class PhysicalBoardTracker {
 //                System.out.println("width  =" + width);
 //                System.out.println("height =" + height);
 
-                _spaces[i*3+j].setBorderArea( topRight, bottomLeft);
+                _physicalSpaces[i*3+j].setBorderArea( topRight, bottomLeft);
             }
         }
 
@@ -114,24 +117,24 @@ public class PhysicalBoardTracker {
             for (int j = 0; j < 3; j++) {
                 Scalar color = new Scalar((j==0?255:0),(j==1?255:0),(j==2?255:0),255);
                 Imgproc.rectangle(drawOnto, new org.opencv.core.Point(
-                        _spaces[i*3+j].ownedTopLeft.x,_spaces[i*3+j].ownedTopLeft.y
+                        _physicalSpaces[i*3+j].ownedTopLeft.x, _physicalSpaces[i*3+j].ownedTopLeft.y
                 ), new org.opencv.core.Point(
-                        _spaces[i*3+j].ownedTopRight.x,_spaces[i*3+j].ownedTopRight.y
+                        _physicalSpaces[i*3+j].ownedTopRight.x, _physicalSpaces[i*3+j].ownedTopRight.y
                 ), color , 2);
             }
         }
 
     }
 
-    public ArrayList<Integer> checkSpaces(org.opencv.core.Point[] pointsToLook){
+    public ArrayList<Integer> checkForAllPosistions(org.opencv.core.Point[] pointsToLook){
         System.out.println("Looking for point matches");
         ArrayList<Integer> locatedSpots = new ArrayList<Integer>();
 
         for (int i = 0; i < pointsToLook.length; i++) {
             System.out.println("Looking for a area that contains "+pointsToLook[i].x + ", " + pointsToLook[i].y);
             for (int j = 0; j < 9; j++) {
-                if(_spaces[j].isWithinArea(pointsToLook[i])){
-                    System.out.println("There is a game piece located at position #"+_spaces[j].position);
+                if(_physicalSpaces[j].isWithinArea(pointsToLook[i])){
+                    System.out.println("There is a game piece located at position #"+ _physicalSpaces[j].position);
 //                    System.out.println("This is "+_spaces[j].ownedTopRight + " & "+_spaces[j].ownedTopLeft);
                     locatedSpots.add(j);
                 }else{
@@ -142,7 +145,22 @@ public class PhysicalBoardTracker {
         return locatedSpots;
     }
     
-    
+    public ArrayList<Integer> checkForNewPieces(ArrayList<Integer> allDetectedLocations){
+        ArrayList<Integer> newPosistions = new ArrayList<Integer>();
+        System.out.println("Checking last know locations for different pieces.");
+
+        for (int i = 0; i < allDetectedLocations.size(); i++) {
+            if(_physicalSpaces[allDetectedLocations.get(i)].ownerValue != 2 ){//TODO: Check if it changes color
+                newPosistions.add(allDetectedLocations.get(i));
+            }
+        }
+
+        System.out.println("newPosistions =" + newPosistions);
+        return newPosistions;
+    }
+//    public setNewPieces
+
+
     public void scheduleNextMovement(Point location1_, Point location2_){
 
     }

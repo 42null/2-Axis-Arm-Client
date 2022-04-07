@@ -4,7 +4,7 @@ import java.awt.*;
 
 public class TickToeButton extends JButton {
 
-        class RoundButton extends LineBorder {
+        static class RoundButton extends LineBorder {
                 private int r;
 
                 RoundButton(int r){
@@ -24,18 +24,21 @@ public class TickToeButton extends JButton {
                 }
         }
 
-        private String _id;
+        private String name;
+        private int posistion = -1;
         private int _toggleStageSelected = 0;//0 = empty, 1 = computer, 2 = player
         private Color _color = Settings.STARTING_COLOR;
         public Color getColor(){return _color;}
 
-        public TickToeButton(String name_) {
-            this._id = name_;
-            this.setName(_id);
+        public TickToeButton(String name_, int posistion) {
+            this.name = name_;
+            this.posistion = posistion;
+            this.setName(name);
             this.setBorder(new RoundButton(Settings.DEFAULT_RADIUS_FOR_TICKTOE_BUTTONS));
         }
 
         public int getTileOwner(){return _toggleStageSelected;}
+        public int getPosistion(){return posistion;}
 
 //SETTERS
         public void setColor(Color newColor_){

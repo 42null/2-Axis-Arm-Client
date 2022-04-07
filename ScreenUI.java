@@ -1,5 +1,3 @@
-import org.opencv.core.Point;
-
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
@@ -122,6 +120,16 @@ public class ScreenUI extends JPanel implements ActionListener {
         _underGameBoard.setBackground(Settings.STARTING_UNDER_GAME_BOARD_COLOR);
         _underGameBoard.setSize(_underGameBoard.getWidth(),_underGameBoard.getHeight()+50);
         totalBox.add(_underGameBoard);
+//Instructions under vitural board
+        JPanel instructions1 = new JPanel();
+        createInstructionsBox(instructions1, "Instructions will go here, after I get this box to be under the game board",Settings.CYAN_DARKER);
+        setVertical(totalBox);
+        alignCenter(_underGameBoard);
+        instructions1.setOpaque(true);
+        instructions1.setBackground(Settings.STARTING_UNDER_GAME_BOARD_COLOR);
+        instructions1.setSize(_underGameBoard.getWidth(),_underGameBoard.getHeight()+50);
+        optionsPannel.add(instructions1);
+
 
         optionsPannel.add(totalBox);
 
@@ -143,6 +151,11 @@ public class ScreenUI extends JPanel implements ActionListener {
         //Add tabbedPane to this panel.
         add(tabbedPane, BorderLayout.CENTER);
 
+    }
+
+    private void createInstructionsBox(JPanel panel, String text, Color backgroundColor){//@@@
+        panel.add(new JLabel(text));
+        panel.setBackground(backgroundColor);
     }
 
     protected JPanel mainTabVideoBoxWithSettings() {
@@ -183,6 +196,7 @@ mouseCoordinate.setBackground(Settings.PLAIN_GREEN);
         optionsBarButtons.add(new JButton("Toggle Corners"));
         optionsBarButtons.add(new JButton("Set Positions"));
         optionsBarButtons.add(new JButton("Check Positions"));
+        optionsBarButtons.add(new JButton("RESET GAME"));
 
         JPanel optionPane = new JPanel();
         optionPane.add(new JLabel("<html><center>Video</center>Options</html>",SwingConstants.CENTER));
@@ -334,13 +348,11 @@ mouseCoordinate.setBackground(Settings.PLAIN_GREEN);
 
         //        GENERATE BUTTONS USING GLOBALISH ARRAY
         for(int i = 0; i< _boardButtons.length; i++){//USE STRINGS TO TURN INTO BUTTONS
-            TickToeButton tmpButton = new TickToeButton(i+"");
+            TickToeButton tmpButton = new TickToeButton(i+"", i);
             tmpButton.setPreferredSize(new Dimension(80,80));
             tmpButton.setBackground(Settings.STARTING_COLOR);
             _boardButtons[i] = tmpButton;
         }
-
-
 
         frame.setLayout(new GridLayout(3,3));
 //      ADD ALL BUTTONS TO FRAME
@@ -400,25 +412,8 @@ mouseCoordinate.setBackground(Settings.PLAIN_GREEN);
 
             int boxNumber = Integer.parseInt((source.substring("TickToeButton[".length(),source.indexOf(','))));
             System.out.println("--------------------User clicked '" + boxNumber + "'");
+            playSpaceAndComputerMove(boxNumber, 2);
 
-            String moveResponse;
-            if(!_gameLogic.isGameOver()) {
-                if (!(_gameLogic.getMoveNumber() % 2 == 0)) {
-                    moveResponse = _gameLogic.leftClickedBoardButton(boxNumber);
-                    /*if(moveResponse != "")*/
-                    updateLabel(_underGameBoard, moveResponse);
-                }
-            }
-
-            if(!_gameLogic.isGameOver()) {
-                if (!(_gameLogic.getMoveNumber() % 2 == 1)) {//Don't run if the player did not make a move
-                    moveResponse = _gameLogic.playComputerMove(GameLogic.ComputerPlayStyles.RANDOM);
-                    //            System.currentTimeMillis();
-                    //            if(moveResponse != ""){
-                    updateLabel(_underGameBoard, moveResponse);
-//                }
-                }
-            }
         }else if(source.startsWith("javax.swing.JButton")){
 //            System.out.println("source = " + source);
             if(source.substring(20).startsWith("Grayscale")){
@@ -450,14 +445,46 @@ mouseCoordinate.setBackground(Settings.PLAIN_GREEN);
 //                _gameLogic.checkSpaces((org.opencv.core.Point[]) combinedFrames.toArray());
                 if(_cameraController.getCirclePoints()!=null) {
                     System.out.println("running .checkSpaces()");
-                    _gameLogic.checkSpaces(_cameraController.getCirclePoints());
+                    System.out.println(PhysicalBoardTracker._physicalSpaces +"::::::::::");
+//                    for (PhysicalBoardTracker.PhysicalSpace geek : PhysicalBoardTracker._physicalSpaces)
+//                        System.out.print(geek.getPosition()+", ");
+                    System.out.println("{{{"+_cameraController.getCirclePoints());
+                    int pos = _gameLogic.checkSpaces(_cameraController.getCirclePoints()).getPosistion();
+                    System.out.println("pos = " + pos);
+                    PhysicalBoardTracker.PhysicalSpace newTile = PhysicalBoardTracker._physicalSpaces[pos];
+                    playSpaceAndComputerMove(newTile.position,2);
                 }
+            }else if(source.substring(20).startsWith("RESET GAME")){
+                _gameLogic.resetGame();
             }
 
         }
 
 
     }
+
+    public void playSpaceAndComputerMove(int space, int player){
+        String moveResponse;
+        if(!_gameLogic.isGameOver()) {
+            if (!(_gameLogic.getMoveNumber() % 2 == 0)) {
+                moveResponse = _gameLogic.leftClickedBoardButton(space);
+                /*if(moveResponse != "")*/
+                updateLabel(_underGameBoard, moveResponse);
+                _gameLogic.playMove(true, space);
+            }
+        }
+        if(!_gameLogic.isGameOver()) {
+            if (!(_gameLogic.getMoveNumber() % 2 == 1)) {//Don't run if the player did not make a move
+                moveResponse = _gameLogic.playComputerMove(GameLogic.ComputerPlayStyles.RANDOM);
+                //            System.currentTimeMillis();
+                //            if(moveResponse != ""){
+                updateLabel(_underGameBoard, moveResponse);
+                _gameLogic.playMove(false, space);
+                //                }
+            }
+        }
+    }
+
 
 
     public void window(BufferedImage img, String text, int x, int y) {

@@ -2,6 +2,7 @@ import org.opencv.core.Point;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Random;
 
 /**
@@ -25,17 +26,18 @@ public class GameLogic {
         _boardTracker.detectAndSetAllSpaces(pointsToSearch, width, height);
     }
 
-    public void checkSpaces(Point[] pointsToSearch){
-        int[] foundTiles = _boardTracker.checkSpaces(pointsToSearch).stream().mapToInt(i -> i).toArray();
-        for (int detectedSpace: foundTiles) {
-            if(currentColorBeingLookedAt == 2){
-                for (int i = 0; i < 9; i++) {
-
-                    _sharedButtons[detectedSpace].setOwner(2);
-                }
-            }
-        }
-
+    /**
+     * Return changed space
+     * @param pointsToSearch
+     * @return
+     */
+    public TickToeButton checkSpaces(Point[] pointsToSearch){
+//        int[] foundTiles = _boardTracker.checkForAllPosistions(pointsToSearch).stream().mapToInt(i -> i).toArray();
+        ArrayList<Integer> foundTiles = _boardTracker.checkForAllPosistions(pointsToSearch);
+        ArrayList<Integer> foundNewTiles = _boardTracker.checkForNewPieces(foundTiles);
+        System.out.println("foundNewTiles = "+foundNewTiles);
+        TickToeButton newlyFoundTile = _sharedButtons[foundNewTiles.get(0)];//TODO: Wrap to make safe with null
+        return newlyFoundTile;
     }
 
 
@@ -195,5 +197,15 @@ public class GameLogic {
         return 0;
     }
 
+    public void resetGame(){
+        for (int i = 0; i < _sharedButtons.length; i++) {
+            _gameIsOver = false;
+            _sharedButtons[i].setOwner(0);
+            _sharedButtons[i].setBackground(Settings.STARTING_COLOR);
+            _sharedButtons[i].setBorder(new TickToeButton.RoundButton(Settings.DEFAULT_RADIUS_FOR_TICKTOE_BUTTONS));
+            _moveNumber = -1;
+            currentColorBeingLookedAt = 2;
+        }
+    }
 
 }

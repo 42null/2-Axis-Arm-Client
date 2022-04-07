@@ -1,7 +1,5 @@
 import java.awt.*;
 import java.io.ByteArrayInputStream;
-import java.util.Arrays;
-import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
@@ -111,6 +109,7 @@ public class CameraCapture extends Thread {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
         Mat processedMat = original_.clone();
+//        original_.submat(new Rect(100,100,100,100). processedMat;
 //        long t0 = System.currentTimeMillis();
         Mat rgb = new Mat();
         Mat hsv = new Mat();
@@ -198,7 +197,16 @@ public class CameraCapture extends Thread {
             if(i == 1){detectedRadius+= r; detectedRadius/=2;}
 
 //            Imgproc.circle(overlay, center, (int)r, new Scalar(0,255,0), 3);
-            Imgproc.circle(returnMat, center, (int)r, new Scalar(Color.MAGENTA.getRed(),Color.MAGENTA.getGreen(),Color.MAGENTA.getBlue()) , 3);
+//            Imgproc.circle(returnMat, center, (int)r, new Scalar(Color.MAGENTA.getRed(),Color.MAGENTA.getGreen(),Color.MAGENTA.getBlue()) , 3);//Magenta circle at the size of the circle
+
+
+            if(savedCorners[1]==null){
+                Imgproc.line(returnMat, new Point(center.x-(int)r/2,center.y), new Point(center.x+(int)r/2,center.y), new Scalar(Color.MAGENTA.getRed(),Color.MAGENTA.getGreen(),Color.MAGENTA.getBlue()) , 4);//Magenta line at the size of the circle
+                Imgproc.line(returnMat, new Point(center.x,center.y-(int)r/2), new Point(center.x,center.y+(int)r/2), new Scalar(Color.MAGENTA.getRed(),Color.MAGENTA.getGreen(),Color.MAGENTA.getBlue()) , 4);//Magenta line at the size of the circle
+            }else{
+                Imgproc.line(returnMat, new Point(center.x-(int)r/2,center.y), new Point(center.x+(int)r/2,center.y), new Scalar(0,255,255,255) , 1);//Yellow line at the size of the circle
+                Imgproc.line(returnMat, new Point(center.x,center.y-(int)r/2), new Point(center.x,center.y+(int)r/2), new Scalar(0,255,255,255) , 1);//Yellow line at the size of the circle
+            }
 
             //InnerArea
             if(false && i == 1)
@@ -225,15 +233,11 @@ public class CameraCapture extends Thread {
 //        Imgproc.rectangle(returnMat, new Point(156.0,171.0),new Point(206.0,221.0), new Scalar(255,255,0,255), 5);//@@@
 
 
-        Imgproc.circle(returnMat, new Point(171.0, 315.0), 10, new Scalar(0,255,255,255), 5);//Yellow Ring
-        Imgproc.circle(returnMat, new Point(299.0, 181.0), 10, new Scalar(0,255,255,255), 5);//Yellow Ring
-
-
 
         if(savedCorners[0]!=null && savedCorners[1]!=null && overlayCorners){
             Point[] withExtraBorderSavedCorners = new Point[]{new Point(savedCorners[0].x-savedCircleDimensions.width*.1, savedCorners[0].y+savedCircleDimensions.height*.1), new Point(savedCorners[1].x+savedCircleDimensions.width*.1,savedCorners[1].y-savedCircleDimensions.height*.1)};
             returnMat = drawOnCorners(returnMat, withExtraBorderSavedCorners);
-            if(PhysicalBoardTracker._spaces[0]!=null){
+            if(PhysicalBoardTracker._physicalSpaces[0]!=null){
                 PhysicalBoardTracker.cheatingBoundsOverlay(returnMat);
             }
         }else if(detectedCorners[0] != null && detectedCorners[1] != null && overlayCorners){
@@ -255,6 +259,12 @@ public class CameraCapture extends Thread {
             corners[1] = tmpPoints[0];
         }
 
+        int r = 10;
+        Imgproc.line(mat, new Point(corners[0].x-(int)r/2,corners[0].y), new Point(corners[0].x+(int)r/2,corners[0].y), new Scalar(0,255,255,255) , 1);//Yellow line at the size of the circle
+        Imgproc.line(mat, new Point(corners[0].x,corners[0].y-(int)r/2), new Point(corners[0].x,corners[0].y+(int)r/2), new Scalar(0,255,255,255) , 1);//Yellow line at the size of the circle
+        Imgproc.line(mat, new Point(corners[1].x-(int)r/2,corners[1].y), new Point(corners[1].x+(int)r/2,corners[1].y), new Scalar(0,255,255,255) , 1);//Yellow line at the size of the circle
+        Imgproc.line(mat, new Point(corners[1].x,corners[1].y-(int)r/2), new Point(corners[1].x,corners[1].y+(int)r/2), new Scalar(0,255,255,255) , 1);//Yellow line at the size of the circle
+
         Imgproc.rectangle(mat, new Point(corners[0].x-10, corners[0].y-10), new Point(corners[0].x+10, corners[0].y+10), toScalar(Color.ORANGE), 2);
         Imgproc.rectangle(mat, new Point(corners[1].x-10, corners[1].y-10), new Point(corners[1].x+10, corners[1].y+10), toScalar(Color.ORANGE), 2);
 
@@ -268,10 +278,7 @@ public class CameraCapture extends Thread {
         Imgproc.line(mat, new Point(corners[1].x, corners[0].y-height/3), new Point(corners[0].x, corners[0].y-height/3), new Scalar(0, 165, 255,50), 1);
         Imgproc.line(mat, new Point(corners[1].x, corners[0].y-2*height/3), new Point(corners[0].x, corners[0].y-2*height/3), new Scalar(0, 165, 255,50), 1);
 
-
-        Imgproc.rectangle(mat, new Point(corners[1].x-2*width/3.5, corners[0].y), new Point(corners[1].x-width/3.5, corners[0].y-height/3), new Scalar(20,20,200,50), 6);
-
-
+//        Imgproc.rectangle(mat, new Point(corners[1].x-2*width/3.5, corners[0].y), new Point(corners[1].x-width/3.5, corners[0].y-height/3), new Scalar(20,20,200,50), 6);
 
         Imgproc.rectangle(mat, new Point(corners[1].x-2*width/3.5, corners[0].y), new Point(corners[1].x-width/3.5, corners[1].y), new Scalar(255, 165, 255,50), 1);
         Imgproc.line(mat, new Point(corners[1].x-2*width/3.5, corners[0].y-height/3), new Point(corners[1].x-width/3.5, corners[0].y-height/3), new Scalar(255, 165, 255,50), 1);
