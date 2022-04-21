@@ -18,12 +18,14 @@ public class ScreenUI extends JPanel implements ActionListener {
 
     //MUTABLE LABELS
     private JLabel _underGameBoard;
-    private JPanel totalBox = new JPanel();
+    private JPanel simulatedSideBoard = new JPanel();
 
     private JTabbedPane tabbedPane = new JTabbedPane();
     private JPanel streamPanel = new JPanel();
     private JLabel tickToeStream = new JLabel("Computer: <Place Status Here>");
-    private JPanel optionsPannel = new JPanel();
+    private JPanel optionsPannel = new JPanel();//new GridBagLayout());
+    GridBagConstraints constraints = new GridBagConstraints();
+
     private JPanel visionSettings = Setting.initializeSettingsPanel( "Settings",
             new Setting( Settings.VISION_SETTING_MESSAGE_MIN, 1, 255, CameraCapture.getCircleSizeRange(true) ),//Setting to 0 will crash in an unrecoverable state for the view
             new Setting( Settings.VISION_SETTING_MESSAGE_MAX, 0, 255, CameraCapture.getCircleSizeRange(false) ),
@@ -104,38 +106,66 @@ public class ScreenUI extends JPanel implements ActionListener {
 
         _cameraController = new CameraCapture(tickToeStream);
 
-        optionsPannel.setAlignmentY(CENTER_ALIGNMENT);
+//        optionsPannel.setAlignmentY(CENTER_ALIGNMENT);
         optionsPannel.setPreferredSize(new Dimension(1_280,720));
+        optionsPannel.setLayout(new GridBagLayout());
+        optionsPannel.setBorder(BorderFactory.createLineBorder(Color.ORANGE, 3));
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+
         //Use default FlowLayout.
-        optionsPannel.add(mainTabVideoBoxWithSettings());
         visionSettings.setBorder(BorderFactory.createLineBorder(Color.MAGENTA,5));
 
-        totalBox = new JPanel();
-        totalBox.setBorder(BorderFactory.createLineBorder(Color.GREEN, 3));
-        totalBox.add(tickTackToeGameButtons());
+        simulatedSideBoard = new JPanel();
+        simulatedSideBoard.setBorder(BorderFactory.createLineBorder(Color.GREEN, 3));
+        simulatedSideBoard.add(tickTackToeGameButtons());
         _underGameBoard = new JLabel("<html>It's <u>your</u> turn <br/>(COLOR)</html>",SwingConstants.CENTER);
-        setVertical(totalBox);
-        alignCenter(_underGameBoard);
+//        setVertical(totalBox);
+//        alignCenter(_underGameBoard);
         _underGameBoard.setOpaque(true);
         _underGameBoard.setBackground(Settings.STARTING_UNDER_GAME_BOARD_COLOR);
-        _underGameBoard.setSize(_underGameBoard.getWidth(),_underGameBoard.getHeight()+50);
-        totalBox.add(_underGameBoard);
+//        _underGameBoard.setSize(_underGameBoard.getWidth(),_underGameBoard.getHeight()+50);
+        simulatedSideBoard.add(_underGameBoard);
 //Instructions under vitural board
         JPanel instructions1 = new JPanel();
-        createInstructionsBox(instructions1, "Instructions will go here, after I get this box to be under the game board",Settings.CYAN_DARKER);
-        setVertical(totalBox);
-        alignCenter(_underGameBoard);
+        createInstructionsBox(instructions1, "Instructions will go here, after I get this box to be under the game board",5,Settings.STARTING_UNDER_GAME_BOARD_COLOR);
+//        setVertical(totalBox);
+//        alignCenter(_underGameBoard);
         instructions1.setOpaque(true);
-        instructions1.setBackground(Settings.STARTING_UNDER_GAME_BOARD_COLOR);
-        instructions1.setSize(_underGameBoard.getWidth(),_underGameBoard.getHeight()+50);
-        optionsPannel.add(instructions1);
+//        instructions1.setSize(_underGameBoard.getWidth(),_underGameBoard.getHeight()+50);
+        instructions1.setBackground(Settings.CYAN_DARKER);
+
+        JLabel title = new JLabel("Title statement here");
+        JLabel bottom = new JLabel("Bottom statement here");
+//        title.setForeground(Color.RED);
+        title.setBackground(new Color(100, 20, 70));
+        title.setBorder(BorderFactory.createLineBorder(new Color(100, 20, 70), 3));
+        bottom.setBorder(BorderFactory.createLineBorder(new Color(100, 20, 70), 3));
+//        title.setSize(new Dimension(optionsPannel.getHeight()/8, optionsPannel.getWidth()));
+//        title.setHorizontalTextPosition(AbstractButton.CENTER);
 
 
-        optionsPannel.add(totalBox);
 
-        optionsPannel.add(streamPanel);
+        title.setBackground(Color.RED);
+//        title.setAlignmentX(.5f);
+//        title.setPreferredSize(new Dimension((int)optionsPannel.getPreferredSize().getWidth(),title.getHeight()));
+        System.out.println((int)Math.round(optionsPannel.getPreferredSize().getWidth())+"::::::::::::::::::::::::::::");
+        title.setSize(new Dimension((int)Math.round(optionsPannel.getPreferredSize().getWidth()),200));
+        addToOptionsPanel(title,1.0,1,0,0, 100,1,true);
+        addToOptionsPanel(bottom,1.0,1,0,3,100,1,false);
 
-        optionsPannel.setBorder(BorderFactory.createLineBorder(Color.ORANGE, 3));
+//====//
+//        optionsPannel.add(mainTabVideoBoxWithSettings(), constraints);
+        JPanel mainTabVideoBoxWithSettings = mainTabVideoBoxWithSettings();
+//        mainTabVideoBoxWithSettings@@@
+//        mainTabVideoBoxWithSettings.setSize(100,100);
+//        mainTabVideoBoxWithSettings.
+        addToOptionsPanel(mainTabVideoBoxWithSettings,-.5,-2,1,1, 1,3,true);
+//        totalBox.        setBackground(new Color(100, 20, 70));
+//        optionsPannel.add(totalBox, constraints);
+        addToOptionsPanel(simulatedSideBoard,-2,.25,99,2, 1,1,true);
+        addToOptionsPanel(instructions1,-2,-2,99,3, 1,1,true);
+
+//        optionsPannel.add(streamPanel);//TODO: DOES NOT HAVE ANYTHING RIGHT NOW
 
         tabbedPane.addTab(Settings.DEFAULT_PAGE_HEADERS[0], optionsPannel);
 
@@ -150,26 +180,47 @@ public class ScreenUI extends JPanel implements ActionListener {
 
         //Add tabbedPane to this panel.
         add(tabbedPane, BorderLayout.CENTER);
-
     }
 
-    private void createInstructionsBox(JPanel panel, String text, Color backgroundColor){//@@@
-        panel.add(new JLabel(text));
-        panel.setBackground(backgroundColor);
+    private void addToOptionsPanel(JComponent element, double requestVertical, double requestHorizontal, int x, int y, int width, int height, boolean alignTop){
+        constraints.ipady = 0;       //reset to default//TODO: Make changeable
+        constraints.weightx = requestHorizontal==-1? 0.0 : requestHorizontal;
+        constraints.weighty = requestVertical;   //request any extra vertical space
+//        constraints.insets = new Insets(10,0,0,0);  //top padding
+        constraints.gridx = x;
+        constraints.gridy = y;
+        constraints.gridwidth = width;
+        constraints.gridheight = height;
+        if(alignTop)
+            constraints.anchor = GridBagConstraints.PAGE_START; //start of space
+        else
+            constraints.anchor = GridBagConstraints.PAGE_END; //end of space
+        optionsPannel.add(element, constraints);
+    }
+
+
+    private void createInstructionsBox(JPanel panel, String text, int width, Color backgroundColor){
+        //Convert string into sections
+
+        JLabel instructions = new JLabel();
+        instructions.setBackground(backgroundColor);
+        updateLabel(instructions,text,width);
+        panel.add(instructions);
     }
 
     protected JPanel mainTabVideoBoxWithSettings() {
         JPanel pane = new JPanel();
-        pane.setLayout(new GridLayout(3,3));
+        pane.setLayout(new GridLayout(3,6));
 
         pane.setBorder(BorderFactory.createTitledBorder("Live Video Feed"));
         pane.setLayout(new BoxLayout(pane, BoxLayout.Y_AXIS));
 
-//        tickToeStream.setSize(500,500);//TODO: Make controllable
+        tickToeStream.setSize(500,500);//TODO: Make controllable
         tickToeStream.setBorder(BorderFactory.createLineBorder(Color.BLUE, 5));
         tickToeStream.setVerticalTextPosition(AbstractButton.BOTTOM);
         tickToeStream.setHorizontalTextPosition(AbstractButton.CENTER);
         tickToeStream.setAlignmentX(CENTER_ALIGNMENT);
+//        tickToeStream.setAlignmentX(LEFT_ALIGNMENT);
 
         JLabel mouseCoordinate = new JLabel("Mouse Coordinate: ");
         tickToeStream.addMouseListener(new MouseAdapter() {//TODO: Move?
@@ -178,11 +229,11 @@ public class ScreenUI extends JPanel implements ActionListener {
             }
         });
         pane.add(tickToeStream);
-//TODO: Not working
-mouseCoordinate.setVerticalTextPosition(AbstractButton.TOP);
-mouseCoordinate.setHorizontalTextPosition(AbstractButton.LEFT);
-mouseCoordinate.setAlignmentX(LEFT_ALIGNMENT);
-mouseCoordinate.setBackground(Settings.PLAIN_GREEN);
+////TODO: Not working
+//mouseCoordinate.setVerticalTextPosition(AbstractButton.TOP);
+//mouseCoordinate.setHorizontalTextPosition(AbstractButton.LEFT);
+//mouseCoordinate.setAlignmentX(LEFT_ALIGNMENT);
+//mouseCoordinate.setBackground(Settings.PLAIN_GREEN);
         pane.add(mouseCoordinate);
 
         GridBagConstraints _bagConstraints = new GridBagConstraints();
@@ -379,7 +430,7 @@ mouseCoordinate.setBackground(Settings.PLAIN_GREEN);
 
         //Create and set up the content pane.
 
-//        ScreenUI newContentPane = new ScreenUI(_gameLogic);@@@
+//        ScreenUI newContentPane = new ScreenUI(_gameLogic);
 //        newContentPane.setOpaque(true); //content panes must be opaque
 //        frame.setContentPane(newContentPane);
 
@@ -469,7 +520,7 @@ mouseCoordinate.setBackground(Settings.PLAIN_GREEN);
             if (!(_gameLogic.getMoveNumber() % 2 == 0)) {
                 moveResponse = _gameLogic.leftClickedBoardButton(space);
                 /*if(moveResponse != "")*/
-                updateLabel(_underGameBoard, moveResponse);
+                updateLabel(_underGameBoard, moveResponse,32);
                 _gameLogic.playMove(true, space);
             }
         }
@@ -478,7 +529,7 @@ mouseCoordinate.setBackground(Settings.PLAIN_GREEN);
                 moveResponse = _gameLogic.playComputerMove(GameLogic.ComputerPlayStyles.RANDOM);
                 //            System.currentTimeMillis();
                 //            if(moveResponse != ""){
-                updateLabel(_underGameBoard, moveResponse);
+                updateLabel(_underGameBoard, moveResponse,32);
                 _gameLogic.playMove(false, space);
                 //                }
             }
@@ -500,22 +551,19 @@ mouseCoordinate.setBackground(Settings.PLAIN_GREEN);
 
 
 
-
-
-
-    private void updateLabel(JLabel label_, String message_){
+    private void updateLabel(JLabel label_, String message_, int maxWidth_){
                 /*
         "abcdefghijklmnopqrstuvwzyz012345".length(); // 6789"; If it exceeds this amount, it will soft crash
          */
-        if(message_.length() > 32){
+        if(message_.length() > maxWidth_){
             //SPLIT UP THE RESPONSE
 //            String[] words = displayStatement.split("\\s+");
             String[] words = message_.split(" ");
             message_ = "";
-            int goalPerRow = message_.length() / 32;
+            int goalPerRow = message_.length() / maxWidth_;
             int lengthOfLineCurrently = 0;
             for (String word: words) {
-                if(lengthOfLineCurrently+word.length()<31){//Space Included
+                if(lengthOfLineCurrently+word.length()<=maxWidth_){//Space Included
                     message_+=(" "+word);
                     lengthOfLineCurrently += word.length()+1;
                 }else{
