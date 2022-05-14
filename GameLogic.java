@@ -81,14 +81,22 @@ public class GameLogic {
     }
 
     public String playMove(boolean playerMove_, int buttonPicked_) {//0 for no win, 1 for a win, -1 for unable to obtain location, 2 = game over
+
         if (_moveNumber > 8) return "All spaces have been filled";
 
         String moveResponse = "";
         int locationsOwner = _sharedButtons[buttonPicked_].getTileOwner();
         if (locationsOwner == 0) {//Not owned by anyone yet
+            System.out.println();
+            System.out.println("-----------------------------------------------");
+            System.out.println("DETECTED CLICK FOR START OF MOVE #"+getMoveNumber()+" WITH [["+(playerMove_?"PLAYER":"COMPUTER")+"]]");
+
             _sharedButtons[buttonPicked_].setOwner(playerMove_? 2:1);
             _sharedButtons[buttonPicked_].setColor(playerMove_ ? Settings.PLAYERS_COLOR : Settings.COMPUTERS_COLOR);
-            moveResponse = playerMove_? Settings.PLAYER_MOVE_WAS_VALID : "Computer made a move";
+            System.out.println("Need to grab a "+(playerMove_?"P":"C")+" piece from storage and place it at "+buttonPicked_+" which is at (" + ""+PhysicalBoardTracker._physicalSpaces[buttonPicked_].getX()+","+""+PhysicalBoardTracker._physicalSpaces[buttonPicked_].getY()+")");
+            System.out.println("Verify move?");
+            System.out.println("Move back to waiting position");
+            moveResponse = playerMove_? Settings.PLAYER_MOVE_WAS_VALID : "Computer made a valid move";
             _moveNumber++;
             switch (checkForWin(buttonPicked_)) {
                 case (0):// No one won

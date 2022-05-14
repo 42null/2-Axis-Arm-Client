@@ -516,6 +516,7 @@ public class ScreenUI extends JPanel implements ActionListener {
 
     public void playSpaceAndComputerMove(int space, int player){
         String moveResponse;
+
         if(!_gameLogic.isGameOver()) {
             if (!(_gameLogic.getMoveNumber() % 2 == 0)) {
                 moveResponse = _gameLogic.leftClickedBoardButton(space);
@@ -573,7 +574,6 @@ public class ScreenUI extends JPanel implements ActionListener {
             }
         }
         message_ = "<html>"+message_+"</html>";
-        System.out.println("message_ = "+message_);
         label_.setText(message_);
     }
 }

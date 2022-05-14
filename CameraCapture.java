@@ -259,6 +259,8 @@ public class CameraCapture extends Thread {
             corners[1] = tmpPoints[0];
         }
 
+        Imgproc.circle(mat,new Point(32,135),4, new Scalar(71,241,90,255),2);//TEMP GREENISH
+
         int r = 10;
         Imgproc.line(mat, new Point(corners[0].x-(int)r/2,corners[0].y), new Point(corners[0].x+(int)r/2,corners[0].y), new Scalar(0,255,255,255) , 1);//Yellow line at the size of the circle
         Imgproc.line(mat, new Point(corners[0].x,corners[0].y-(int)r/2), new Point(corners[0].x,corners[0].y+(int)r/2), new Scalar(0,255,255,255) , 1);//Yellow line at the size of the circle

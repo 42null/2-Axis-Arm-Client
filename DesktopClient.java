@@ -22,6 +22,7 @@ public class DesktopClient {
 ////        mainWindow.createMainScreen();
 //        createMainScreen(mainWindow);
         ScreenUI screenUI = new ScreenUI(tickTackToeController);
+        ArduinoConnector arduinoConnector = new ArduinoConnector();
 
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
@@ -30,7 +31,13 @@ public class DesktopClient {
                 System.out.println("Camera thread id = "+screenUI.startCameraThread());
             }
         });
-
+        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                System.out.println("Starting thread for Arduino");
+                arduinoConnector.start();
+                System.out.println("Arduino thread id = "+arduinoConnector.currentThread().getId());
+            }
+        });
     }
 
     public void createMainScreen(DisplayScreen dispScreen_){

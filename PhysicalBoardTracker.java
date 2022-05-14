@@ -17,6 +17,7 @@ public class PhysicalBoardTracker {
 
 */
     public static PhysicalSpace[] _physicalSpaces = new PhysicalSpace[15]; //TODO: Make not static and private once cheater bounds view is finished
+    public static int numberOfPlaySpaces = 9;//First 9 spaces are part of the game, rest are storage
 
     class PhysicalSpace {
         private int storageType = 0;
@@ -25,25 +26,35 @@ public class PhysicalBoardTracker {
         private org.opencv.core.Point ownedTopRight;
         private org.opencv.core.Point ownedTopLeft;
         protected int position = -1;
+        private boolean isPlaySpace = false;
+        private int screenPosistionX =-1, screenPosistionY=-1;//1 for not set yet
 
         public PhysicalSpace(int position) {
             this.position = position;
             this.ownerValue = 0;
+            if(position < numberOfPlaySpaces){
+                this.isPlaySpace = true;
+            }
         }
 
         public PhysicalSpace(int position, int owner_) {
             this.position = position;
             this.ownerValue = owner_;
+            if(position < numberOfPlaySpaces){
+                this.isPlaySpace = true;
+            }
         }
 
         public int getOwner() {
             return ownerValue;
         }
 //        public void setOwner(int newOwner){ownerValue = newOwner;}
-        public int getPosition() {
-            return position;
-        }
-
+        public int getPosition() {return position; }
+        public boolean getIsPlaySpace(){return isPlaySpace;}
+        public int getX(){return screenPosistionX;}
+        public void setX(int newPos){screenPosistionX=newPos;}
+        public int getY(){return screenPosistionY;}
+        public void setY(int newPos){screenPosistionY=newPos;}
 
         public void setBorderArea(org.opencv.core.Point topRight, org.opencv.core.Point bottomLeft) {
 
@@ -56,6 +67,8 @@ public class PhysicalBoardTracker {
             ownedTopLeft = topRight;//new double[]{topRight.x, topRight.y, bottomLeft.x, bottomLeft.y});
 //            ownedArea.width = (int) (bottomLeft.x - topRight.x);
 //            ownedArea.height = (int) (bottomLeft.y - topRight.y);
+            setX((int)Math.round(bottomLeft.x+(topRight.x-bottomLeft.x)/2));
+            setY((int)Math.round(topRight.y+(bottomLeft.y-topRight.y)/2));
 
         }
 
@@ -76,25 +89,36 @@ public class PhysicalBoardTracker {
 
     }
 
-    public int getNextAvailable(int owner_){//0 for empty, 1 for computer, 2 for player
-        for(int i = 0; i < 5; i++) {//TODO: Make check owner side first
-            if(_physicalSpaces[i].getOwner()==owner_){
+    public int getNextStoreSpaceLocation(int ownerLookingFor_){//0 for empty, 1 for computer, 2 for player//@@@
+        for(int i = numberOfPlaySpaces; i < _physicalSpaces.length; i++) {//TODO: Make check owner side first
+            if(_physicalSpaces[i].getOwner()==ownerLookingFor_){
                 return i;
             }
         }
+        System.out.println("Error in PhysicalBoardTracker, could not find owner "+ownerLookingFor_+" in the storage spots.");
         return -1;
     }
+
+    public void printKnownSpaces(){
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                System.out.print("["+i*3+j+","+_physicalSpaces[i*3+j].getOwner()=="_"?0:_physicalSpaces[i*3+j].getOwner()==1?"C":"P"+"]");
+            }
+        }
+    }
+
 
     public void resetBoard(){
 
     }
 
     public void detectAndSetAllSpaces(org.opencv.core.Point[] pointsToLook, int width, int height){
+        int widthCorners = (int) Math.round((pointsToLook[1].x-pointsToLook[0].x));
+        int heightCorners = (int) Math.round((pointsToLook[1].y-pointsToLook[0].y));
+
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                 _physicalSpaces[i*3+j] = new PhysicalSpace(i*3+j);
-                int widthCorners = (int) Math.round((pointsToLook[1].x-pointsToLook[0].x));
-                int heightCorners = (int) Math.round((pointsToLook[1].y-pointsToLook[0].y));
 
                 org.opencv.core.Point topRight = new org.opencv.core.Point(Math.round((pointsToLook[0].x+(j*widthCorners/3))+width*.2),Math.round((pointsToLook[1].y+(height/2)-(i*heightCorners/3))-height*.2));
                 org.opencv.core.Point bottomLeft = new org.opencv.core.Point(Math.round((pointsToLook[0].x+width+(j*widthCorners/3)+width*.2)),Math.round((pointsToLook[1].y+1.5*(height)-(i*heightCorners/3)-height*.2)));
@@ -109,7 +133,32 @@ public class PhysicalBoardTracker {
                 _physicalSpaces[i*3+j].setBorderArea( topRight, bottomLeft);
             }
         }
+//Left side
+        for (int i = 0; i < 3; i++) {
+            _physicalSpaces[9+i] = new PhysicalSpace(9+i);
 
+            org.opencv.core.Point topRight = new org.opencv.core.Point(Math.round((pointsToLook[0].x - (2 * widthCorners / 3)) + width * .2), Math.round((pointsToLook[1].y+(height/2)-(i*heightCorners/3))-height*.2));
+            org.opencv.core.Point bottomLeft = new org.opencv.core.Point(Math.round((pointsToLook[0].x+width-(2*widthCorners/3)+width*.2)),Math.round((pointsToLook[1].y+1.5*(height)-(i*heightCorners/3)-height*.2)));
+
+        System.out.println("<<<POINT #"+(9+i)+">>>");
+            System.out.println(topRight.x + "," + topRight.y);
+            System.out.println(bottomLeft.x + "," + bottomLeft.y);
+
+            _physicalSpaces[9+i].setBorderArea( topRight, bottomLeft);
+        }
+//Right side
+        for (int i = 0; i < 3; i++) {
+            _physicalSpaces[12+i] = new PhysicalSpace(12+i);
+
+            org.opencv.core.Point topRight = new org.opencv.core.Point(Math.round((pointsToLook[1].x + (2 * widthCorners / 3)) -width*.2), Math.round((pointsToLook[1].y+(height/2)-(i*heightCorners/3))-height*.2));
+            org.opencv.core.Point bottomLeft = new org.opencv.core.Point(Math.round((pointsToLook[1].x-width+(2*widthCorners/3)-width*.2)),Math.round((pointsToLook[1].y+1.5*(height)-(i*heightCorners/3)-height*.2)));
+
+            System.out.println("<<<POINT #"+(12+i)+">>>");
+            System.out.println(topRight.x + "," + topRight.y);
+            System.out.println(bottomLeft.x + "," + bottomLeft.y);
+
+            _physicalSpaces[12+i].setBorderArea( topRight, bottomLeft);
+        }
     }
 
     public static void cheatingBoundsOverlay(Mat drawOnto){
@@ -123,7 +172,22 @@ public class PhysicalBoardTracker {
                 ), color , 2);
             }
         }
-
+        Scalar color = new Scalar(64,224,208,255);
+        for (int i = 0; i < 3; i++) {
+            Imgproc.rectangle(drawOnto, new org.opencv.core.Point(
+                    _physicalSpaces[9+i].ownedTopLeft.x, _physicalSpaces[9+i].ownedTopLeft.y
+            ), new org.opencv.core.Point(
+                    _physicalSpaces[9+i].ownedTopRight.x, _physicalSpaces[9+i].ownedTopRight.y
+            ), color , 2);
+        }
+        color = new Scalar(64,224,208,255);
+        for (int i = 0; i < 3; i++) {
+            Imgproc.rectangle(drawOnto, new org.opencv.core.Point(
+                    _physicalSpaces[12+i].ownedTopLeft.x, _physicalSpaces[12+i].ownedTopLeft.y
+            ), new org.opencv.core.Point(
+                    _physicalSpaces[12+i].ownedTopRight.x, _physicalSpaces[12+i].ownedTopRight.y
+            ), color , 2);
+        }
     }
 
     public ArrayList<Integer> checkForAllPosistions(org.opencv.core.Point[] pointsToLook){
