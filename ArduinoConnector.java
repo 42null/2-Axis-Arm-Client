@@ -25,19 +25,33 @@ public class ArduinoConnector extends Thread {
         }
 
         public void sendMessage(String message) throws Exception {
-            outputStream.write(message.getBytes());//            outputStream.close();
+            FileOutputStream fos = new FileOutputStream("/dev/ttyUSB0");
+//
+            fos.write(message.getBytes());//            outputStream.close();
+//            outputStream.write(message.getBytes());//            outputStream.close();
+            fos.close();
         }
         public void listen() throws Exception {
-//            try {
-//                Thread.sleep(1000);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
+            this.inputScanner = new Scanner(this.inputStream);
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
 //            while (inputScanner.hasNextLine()) {
-            System.out.println(">>>>>"+inputScanner.nextLine());
+            if(this.inputScanner.hasNext()){
+                System.out.println("Received: \""+inputScanner.nextLine()+"\"");
+            }else{
+                System.out.println("Did not have anything");
+            }
+            this.inputScanner.close();
 //            }
         }
+    }
+
+    public void sendMessage(String message) throws Exception {
+        devConnection.sendMessage(message);
     }
 
 
@@ -49,8 +63,6 @@ public class ArduinoConnector extends Thread {
     public void run(){
         try{
             keepLooping = true;
-
-
 
 
             System.out.println("Thread " + this.currentThread().getId() + " is running");
@@ -66,8 +78,9 @@ public class ArduinoConnector extends Thread {
 //                } catch (InterruptedException e) {
 //                    e.printStackTrace();
 //                }
-                while(keepLooping){
+                for (int i = 0; i < 1 || keepLooping; i++) {
                     devConnection.listen();
+                    devConnection.sendMessage("ping "+i);
                 }
             }
         }catch(Exception e) {

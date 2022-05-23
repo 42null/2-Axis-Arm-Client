@@ -1,3 +1,5 @@
+import sun.awt.X11.XSystemTrayPeer;
+
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
@@ -16,6 +18,8 @@ public class ScreenUI extends JPanel implements ActionListener {
     private static GameLogic _gameLogic;
     private CameraCapture _cameraController;
 
+    private ArduinoConnector _arduinoConnector;
+
     //MUTABLE LABELS
     private JLabel _underGameBoard;
     private JPanel simulatedSideBoard = new JPanel();
@@ -24,6 +28,9 @@ public class ScreenUI extends JPanel implements ActionListener {
     private JPanel streamPanel = new JPanel();
     private JLabel tickToeStream = new JLabel("Computer: <Place Status Here>");
     private JPanel optionsPannel = new JPanel();//new GridBagLayout());
+
+    JTextField tty0SendBox = new JTextField("PICKUP 2500;");
+
     GridBagConstraints constraints = new GridBagConstraints();
 
     private JPanel visionSettings = Setting.initializeSettingsPanel( "Settings",
@@ -98,10 +105,11 @@ public class ScreenUI extends JPanel implements ActionListener {
 
     }
 
-    public ScreenUI(GameLogic gameLogic_) {
+    public ScreenUI(GameLogic gameLogic_, ArduinoConnector arduinoConnector_) {
         super(new BorderLayout());
 
         this._gameLogic = gameLogic_;
+        this._arduinoConnector = arduinoConnector_;
         _boardButtons = gameLogic_.getBoardButtons();
 
         _cameraController = new CameraCapture(tickToeStream);
@@ -148,7 +156,7 @@ public class ScreenUI extends JPanel implements ActionListener {
         title.setBackground(Color.RED);
 //        title.setAlignmentX(.5f);
 //        title.setPreferredSize(new Dimension((int)optionsPannel.getPreferredSize().getWidth(),title.getHeight()));
-        System.out.println((int)Math.round(optionsPannel.getPreferredSize().getWidth())+"::::::::::::::::::::::::::::");
+        System.out.println((int)Math.round(optionsPannel.getPreferredSize().getWidth())+":::::::::::::::::");
         title.setSize(new Dimension((int)Math.round(optionsPannel.getPreferredSize().getWidth()),200));
         addToOptionsPanel(title,1.0,1,0,0, 100,1,true);
         addToOptionsPanel(bottom,1.0,1,0,3,100,1,false);
@@ -169,8 +177,9 @@ public class ScreenUI extends JPanel implements ActionListener {
 
         tabbedPane.addTab(Settings.DEFAULT_PAGE_HEADERS[0], optionsPannel);
 
-        JPanel labelAndComponent = new JPanel();
-        tabbedPane.addTab(Settings.DEFAULT_PAGE_HEADERS[1], labelAndComponent);
+        JPanel mainTab2 = tty0ButtonsPanel();
+
+        tabbedPane.addTab(Settings.DEFAULT_PAGE_HEADERS[1], mainTab2);
 
         JPanel buttonAndComponent = new JPanel();
         //Use default FlowLayout.
@@ -261,6 +270,44 @@ public class ScreenUI extends JPanel implements ActionListener {
         pane.add(visionSettings);
         return pane;
     }
+
+    protected JPanel tty0ButtonsPanel() {
+        JPanel pane = new JPanel();
+        pane.setLayout(new GridLayout(3,6));
+
+        pane.setBorder(BorderFactory.createTitledBorder("Arduino TTY0 Commands"));
+        pane.setLayout(new BoxLayout(pane, BoxLayout.Y_AXIS));
+
+        GridBagConstraints _bagConstraints = new GridBagConstraints();
+
+        _bagConstraints.weightx = 0.0;//reset to the default
+
+        //SETTINGS
+        ArrayList<JButton> optionsBarButtons = new ArrayList<>();
+        optionsBarButtons.add(new JButton("YELLOW ON;"));//TODO: Make it grab from a strings file
+        optionsBarButtons.add(new JButton("YELLOW OFF;"));
+        optionsBarButtons.add(new JButton("PICKUP 5000;"));
+        optionsBarButtons.add(new JButton("Send Command"));
+
+
+        JPanel optionPane = new JPanel();
+        optionPane.add(new JLabel("<html><center>TTY0</center>Commands</html>",SwingConstants.CENTER));
+        //Add list of buttons and setup their actionListeners
+        for (JButton button: optionsBarButtons) {
+            button.setName(button.getText());
+            button.addActionListener(this);
+            optionPane.add(button);
+        }
+
+        //        tty0SendBox.setAlignmentX(CENTER_ALIGNMENT);
+//        tty0SendBox.setAlignmentY(TOP_ALIGNMENT);
+//        tty0SendBox.setSize(100,100);
+        optionPane.add(tty0SendBox,4);
+
+        pane.add(optionPane);
+        return pane;
+    }
+
 
     protected Component makeUnit(Component component,
                                  GridBagLayout gridbag,
@@ -507,8 +554,26 @@ public class ScreenUI extends JPanel implements ActionListener {
                 }
             }else if(source.substring(20).startsWith("RESET GAME")){
                 _gameLogic.resetGame();
+//                System.out.println("Attempting YELLOW ON;");
+//                try {
+//                    _arduinoConnector.sendMessage("YELLOW ON;");
+//                } catch (Exception e) {
+//                    throw new RuntimeException(e);
+//                }
+            }else if(source.substring(20,source.indexOf(",")).endsWith(";")){//TODO: Make more efficent with chars
+                System.out.println("source = "+source.substring(20,source.indexOf(",")));
+                try {
+                    _arduinoConnector.sendMessage(source.substring(20,source.indexOf(",")));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }else if(source.substring(20).startsWith("Send Command")){
+                try {
+                    _arduinoConnector.sendMessage(tty0SendBox.getText());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }
-
         }
 
 

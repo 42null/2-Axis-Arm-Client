@@ -21,8 +21,8 @@ public class DesktopClient {
 //
 ////        mainWindow.createMainScreen();
 //        createMainScreen(mainWindow);
-        ScreenUI screenUI = new ScreenUI(tickTackToeController);
         ArduinoConnector arduinoConnector = new ArduinoConnector();
+        ScreenUI screenUI = new ScreenUI(tickTackToeController, arduinoConnector);
 
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
